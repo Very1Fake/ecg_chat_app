@@ -1,5 +1,7 @@
+import 'package:ecg_chat_app/pages/chat_page.dart';
 import 'package:ecg_chat_app/pages/main_page.dart';
 import 'package:ecg_chat_app/pages/settings_page.dart';
+import 'package:ecg_chat_app/utils/settings.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -23,6 +25,7 @@ class ChatApp extends StatelessWidget {
       ),
       home: const MainPage(),
       routes: {
+        '/chat': (context) => const ChatPage(),
         '/settings': (context) => const SettingsPage(),
       },
     );

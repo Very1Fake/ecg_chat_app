@@ -1,78 +1,6 @@
 import 'package:ecg_chat_app/utils/consts.dart';
+import 'package:ecg_chat_app/utils/settings.dart';
 import 'package:flutter/material.dart';
-
-// TODO: Proper use at `Settings`
-enum ThemeColor {
-  system,
-  navy,
-  mint,
-  lavender,
-  caramel,
-  forest,
-  wine;
-
-  String asString() {
-    switch (this) {
-      case ThemeColor.system:
-        return "System";
-      case ThemeColor.navy:
-        return "Navy";
-      case ThemeColor.mint:
-        return "Mint";
-      case ThemeColor.lavender:
-        return "Lavender";
-      case ThemeColor.caramel:
-        return "Caramel";
-      case ThemeColor.forest:
-        return "Forest";
-      case ThemeColor.wine:
-        return "Wine";
-    }
-  }
-
-  Color toColor() {
-    switch (this) {
-      case ThemeColor.system:
-        return Colors.blue[500]!;
-      case ThemeColor.navy:
-        return const Color(0xFF45A0F2);
-      case ThemeColor.mint:
-        return const Color(0xFF2AB8B8);
-      case ThemeColor.lavender:
-        return const Color(0xFFB4ABF5);
-      case ThemeColor.caramel:
-        return const Color(0xFFF78204);
-      case ThemeColor.forest:
-        return const Color(0xFF00FFA9);
-      case ThemeColor.wine:
-        return const Color(0xFF894771);
-    }
-  }
-}
-
-// TODO: Proper use at `Settings`
-enum DiskRetention {
-  oneDay,
-  threeDays,
-  week,
-  month,
-  forever;
-
-  String asString() {
-    switch (this) {
-      case DiskRetention.oneDay:
-        return '1 Day';
-      case DiskRetention.threeDays:
-        return '3 Days';
-      case DiskRetention.week:
-        return '1 Week';
-      case DiskRetention.month:
-        return '1 Month';
-      case DiskRetention.forever:
-        return 'Forever';
-    }
-  }
-}
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -97,9 +25,7 @@ class _SettingsPageState extends State<SettingsPage> {
       const Divider(),
     ];
     decorators.addAll(children);
-    decorators.add(Container(
-      margin: const EdgeInsets.only(bottom: 16.0),
-    ));
+    decorators.add(const SizedBox(height: 16.0));
 
     return Column(children: decorators);
   }
@@ -186,6 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   margin: const EdgeInsets.only(bottom: 8.0),
                   child: const Text("Keep data for")),
               Slider(
+                  // FIX: Find better design
                   value: diskRetention.index.toDouble(),
                   max: (DiskRetention.values.length - 1).toDouble(),
                   divisions: DiskRetention.values.length - 1,
