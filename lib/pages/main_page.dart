@@ -1,4 +1,5 @@
 import 'package:ecg_chat_app/models/server.dart';
+import 'package:ecg_chat_app/utils/consts.dart';
 import 'package:ecg_chat_app/widgets/server_list_item.dart';
 import 'package:flutter/material.dart';
 
@@ -62,9 +63,7 @@ class _MainPageState extends State<MainPage> {
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text("Settings will be implemented soon..."))),
+              onTap: () => Navigator.of(context).pushNamed('/settings'),
             ),
             const Divider(),
             ListTile(
@@ -72,9 +71,9 @@ class _MainPageState extends State<MainPage> {
               title: const Text("About app"),
               onTap: () => showAboutDialog(
                 context: context,
-                applicationIcon: const Icon(Icons.message),
-                applicationName: "ECG Chat App",
-                applicationVersion: "0.0.1",
+                applicationIcon: appIcon,
+                applicationName: appName,
+                applicationVersion: appVersion,
               ),
             )
           ],
