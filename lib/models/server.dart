@@ -7,8 +7,14 @@ class Server {
   String address;
   String name;
   String? description;
+  bool favorite;
 
-  Server(this.address, this.name, [this.description]);
+  // TODO: Load favorites from DB
+  Server(this.address, this.name, [this.description]) : favorite = false;
+
+  static Server dummy() {
+    return Server('127.0.0.1', 'Dummy Server', 'Dummy description');
+  }
 
   static List<Server> randomList(int length) {
     return List.generate(length, (i) => random(i));

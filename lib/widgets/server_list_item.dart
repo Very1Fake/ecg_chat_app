@@ -3,9 +3,12 @@ import 'package:ecg_chat_app/pages/chat_page.dart';
 import 'package:flutter/material.dart';
 
 class ServerListItem extends StatelessWidget {
+  final int index;
   final Server server;
+  final Future<bool?> Function(int, Server) showBottomSheet;
 
-  const ServerListItem(this.server, {super.key});
+  const ServerListItem(this.index, this.server, this.showBottomSheet,
+      {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,17 +16,22 @@ class ServerListItem extends StatelessWidget {
 
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: Colors.green[500],
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        radius: 32.0,
         child: const Icon(
           Icons.broken_image_outlined,
           color: Colors.white,
+          size: 28.0,
         ),
       ),
       title: Text(server.name),
-      subtitle: description != null ? Text(description) : null,
-      minVerticalPadding: 16.0,
+      subtitle: description != null
+          ? Text(description,
+              style: TextStyle(color: Theme.of(context).colorScheme.primary))
+          : const Text("This server has no description"),
       onTap: () => Navigator.of(context)
           .pushNamed('/chat', arguments: ChatPageArgs(server)),
+      onLongPress: () => showBottomSheet(index, server),
     );
   }
 }

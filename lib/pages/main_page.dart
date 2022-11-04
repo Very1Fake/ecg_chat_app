@@ -1,5 +1,10 @@
+import 'dart:math';
+
+import 'package:ecg_chat_app/models/account.dart';
 import 'package:ecg_chat_app/models/server.dart';
+import 'package:ecg_chat_app/utils/colors.dart';
 import 'package:ecg_chat_app/utils/consts.dart';
+import 'package:ecg_chat_app/widgets/player_list_item.dart';
 import 'package:ecg_chat_app/widgets/server_list_item.dart';
 import 'package:flutter/material.dart';
 
@@ -11,8 +16,11 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  List<Account> accountList = Account.randomList(Random().nextInt(5));
+  int currentAccount = 0;
   List<Server> serverList = Server.randomList(128);
 
+  bool accountManagerExpanded = false;
   int selectedTab = 0;
 
   Widget underConstruction(String text) {
@@ -21,7 +29,7 @@ class _MainPageState extends State<MainPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.construction,
+            Icons.precision_manufacturing_outlined,
             size: 128.0,
             color: Colors.grey[500],
           ),
@@ -35,22 +43,174 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  Widget sectionFavorites() {
+    int favoritesCount = serverList.where((server) => server.favorite).length;
+    return favoritesCount == 0
+        ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.format_list_bulleted,
+                  size: 64.0,
+                  color: Colors.grey[500],
+                ),
+                Text(
+                  'Favorite list is empty',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 24.0, color: Colors.grey[500]),
+                )
+              ],
+            ),
+          )
+        : ListView.builder(
+            itemCount: favoritesCount,
+            itemBuilder: (context, index) {
+              Server server = serverList
+                  .where((server) => server.favorite)
+                  .elementAt(index);
+              return ServerListItem(
+                  serverList.indexOf(server), server, showBottomSheet);
+            });
+  }
+
+  Future<bool?> showBottomSheet(int index, Server server) {
+    return showModalBottomSheet(
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32.0))),
+      context: context,
+      builder: (context) => Column(
+        children: [
+          Container(
+            width: 64.0,
+            height: 4.0,
+            decoration: BoxDecoration(
+              color: Theme.of(context).hintColor,
+              borderRadius: const BorderRadius.all(Radius.circular(20.0)),
+            ),
+            margin: const EdgeInsets.symmetric(vertical: 14.0),
+          ),
+          ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text("About server"),
+              iconColor: Theme.of(context).colorScheme.primary,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text(
+                        'ServerInfoPage will be added in future updates')));
+                Navigator.of(context).pop();
+              }),
+          ListTile(
+              leading: const Icon(Icons.push_pin),
+              title: const Text("Pin"),
+              iconColor: Theme.of(context).colorScheme.primary,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text(
+                        'Pinning server to top will be available in future updates')));
+                Navigator.of(context).pop();
+              }),
+          ListTile(
+              leading: server.favorite
+                  ? const Icon(Icons.favorite_border)
+                  : const Icon(Icons.favorite),
+              title: server.favorite
+                  ? const Text("Remove from favorites")
+                  : const Text("Add to favorites"),
+              iconColor: Theme.of(context).colorScheme.primary,
+              onTap: () {
+                // Change favorite status and request update
+                setState(() {
+                  server.favorite = !server.favorite;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(server.favorite
+                        ? '"${server.name} removed from favorites"'
+                        : '"${server.name}" added to favorites')));
+                Navigator.of(context).pop();
+              }),
+          ListTile(
+              leading: const Icon(Icons.delete),
+              title: const Text("Remove server"),
+              iconColor: Theme.of(context).colorScheme.error,
+              textColor: Theme.of(context).colorScheme.error,
+              onTap: () {
+                setState(() {
+                  serverList.removeAt(index);
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('"${server.name}" removed')));
+                Navigator.of(context).pop();
+              })
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    Account account = accountList[currentAccount];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Server List"),
       ),
       drawer: Drawer(
         child: ListView(
+          padding: const EdgeInsets.all(0.0),
           children: [
-            DrawerHeader(
+            Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
+                color: darken(Theme.of(context).primaryColor, 0.0225),
               ),
-              child: Text(
-                "Drawer header",
-                style: Theme.of(context).textTheme.headline5,
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    Container(
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.all(16.0),
+                      child: CircleAvatar(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          radius: 32.0,
+                          child: const Icon(Icons.person, size: 42.0)),
+                    ),
+                    accountList.length == 1
+                        ? ListTile(
+                            title: Text(account.login),
+                            subtitle: Text(
+                              account.email,
+                              style: Theme.of(context).textTheme.caption,
+                            ),
+                          )
+                        : ExpansionTile(
+                            title: Text(account.login),
+                            subtitle: Text(
+                              account.email,
+                              style: Theme.of(context).textTheme.caption,
+                            ),
+                            initiallyExpanded: accountManagerExpanded,
+                            childrenPadding:
+                                const EdgeInsets.symmetric(vertical: 4.0),
+                            onExpansionChanged: (value) => setState(() =>
+                                accountManagerExpanded =
+                                    !accountManagerExpanded),
+                            children: List.generate(
+                                accountList.length,
+                                (index) => PlayerListItem(
+                                      accountList[index].toPlayer(),
+                                      selected: index == currentAccount,
+                                      callback: index != currentAccount
+                                          ? (_) {
+                                              setState(
+                                                  () => currentAccount = index);
+                                              Navigator.of(context).pop();
+                                            }
+                                          : null,
+                                    )),
+                          ),
+                  ],
+                ),
               ),
             ),
             ListTile(
@@ -81,10 +241,12 @@ class _MainPageState extends State<MainPage> {
       ),
       body: [
         ListView.builder(
+          prototypeItem: ServerListItem(0, Server.dummy(), showBottomSheet),
           itemCount: serverList.length,
-          itemBuilder: (context, i) => ServerListItem(serverList[i]),
+          itemBuilder: (context, i) =>
+              ServerListItem(i, serverList[i], showBottomSheet),
         ),
-        underConstruction("'Favorites' section will be implemented soon..."),
+        sectionFavorites(),
         underConstruction("This section will implemented in future updates"),
       ][selectedTab],
       floatingActionButton: FloatingActionButton(
