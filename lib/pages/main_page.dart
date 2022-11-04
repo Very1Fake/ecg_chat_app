@@ -16,7 +16,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  List<Account> accountList = Account.randomList(Random().nextInt(5));
+  List<Account> accountList = Account.randomList(Random().nextInt(4) + 1);
   int currentAccount = 0;
   List<Server> serverList = Server.randomList(128);
 
@@ -31,12 +31,15 @@ class _MainPageState extends State<MainPage> {
           Icon(
             Icons.precision_manufacturing_outlined,
             size: 128.0,
-            color: Colors.grey[500],
+            color: Theme.of(context).hintColor,
           ),
           Text(
             text,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 28.0, color: Colors.grey[500]),
+            style: TextStyle(
+              fontSize: 28.0,
+              color: Theme.of(context).hintColor,
+            ),
           )
         ],
       ),
@@ -53,12 +56,15 @@ class _MainPageState extends State<MainPage> {
                 Icon(
                   Icons.format_list_bulleted,
                   size: 64.0,
-                  color: Colors.grey[500],
+                  color: Theme.of(context).hintColor,
                 ),
                 Text(
                   'Favorite list is empty',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 24.0, color: Colors.grey[500]),
+                  style: TextStyle(
+                    fontSize: 24.0,
+                    color: Theme.of(context).hintColor,
+                  ),
                 )
               ],
             ),
@@ -161,7 +167,8 @@ class _MainPageState extends State<MainPage> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: darken(Theme.of(context).primaryColor, 0.0225),
+                color: shiftLightness(Theme.of(context).brightness,
+                    Theme.of(context).colorScheme.primaryContainer, 0.0225),
               ),
               child: SafeArea(
                 child: Column(
@@ -173,21 +180,38 @@ class _MainPageState extends State<MainPage> {
                           backgroundColor:
                               Theme.of(context).colorScheme.primary,
                           radius: 32.0,
-                          child: const Icon(Icons.person, size: 42.0)),
+                          child: Icon(
+                            Icons.person,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            size: 42.0,
+                          )),
                     ),
                     accountList.length == 1
                         ? ListTile(
-                            title: Text(account.login),
+                            title: Text(
+                              account.login,
+                              // style: Theme.of(context).primaryTextTheme.titleSmall,
+                              style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer),
+                            ),
                             subtitle: Text(
                               account.email,
-                              style: Theme.of(context).textTheme.caption,
+                              style: Theme.of(context).primaryTextTheme.caption,
                             ),
                           )
                         : ExpansionTile(
-                            title: Text(account.login),
+                            title: Text(
+                              account.login,
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
                             subtitle: Text(
                               account.email,
-                              style: Theme.of(context).textTheme.caption,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .caption
+                                  ?.copyWith(fontSize: 12.5),
                             ),
                             initiallyExpanded: accountManagerExpanded,
                             childrenPadding:
@@ -207,6 +231,9 @@ class _MainPageState extends State<MainPage> {
                                               Navigator.of(context).pop();
                                             }
                                           : null,
+                                      titleStyle: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall,
                                     )),
                           ),
                   ],

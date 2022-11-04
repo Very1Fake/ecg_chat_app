@@ -24,38 +24,23 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   late Server server;
-  late List<Message> messages;
+  late List<Message> messages = List.generate(128, (index) {
+    return Message(
+        WordPair.random().asPascalCase,
+        Random().nextBool()
+            ? players[Random().nextInt(players.length - 1)]
+            : null);
+  });
   List<Player> players = Player.randomList(32);
 
-  late TextEditingController messageController;
-
-  @override
-  void initState() {
-    super.initState();
-
-    var random = Random();
-
-    messages = List.generate(128, (index) {
-      return Message(
-          WordPair.random().asPascalCase,
-          random.nextBool()
-              ? players[random.nextInt(players.length - 1)]
-              : null);
-    });
-
-    messageController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    messageController.dispose();
-    super.dispose();
-  }
+  TextEditingController messageController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     var args = ModalRoute.of(context)!.settings.arguments as ChatPageArgs;
     server = args.server;
+
+    Color textColor = Theme.of(context).colorScheme.onPrimaryContainer;
 
     return DefaultTabController(
       length: 2,
@@ -71,11 +56,22 @@ class _ChatPageState extends State<ChatPage> {
                     child: Text(server.address,
                         style: const TextStyle(
                           fontSize: 11.0,
+                          color: Colors.grey,
                         )))
               ]),
-          bottom: const TabBar(tabs: [
-            Tab(text: 'Chat', icon: Icon(Icons.question_answer)),
-            Tab(text: 'Player', icon: Icon(Icons.people))
+          bottom: TabBar(labelColor: textColor, tabs: [
+            Tab(
+                text: 'Chat',
+                icon: Icon(
+                  Icons.question_answer,
+                  color: textColor,
+                )),
+            Tab(
+                text: 'Player',
+                icon: Icon(
+                  Icons.people,
+                  color: textColor,
+                ))
           ]),
         ),
         body: TabBarView(
@@ -96,17 +92,39 @@ class _ChatPageState extends State<ChatPage> {
                   Expanded(
                     child: TextField(
                       controller: messageController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'Message',
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Theme.of(context).backgroundColor,
+                        hintText: 'Message',
+                        border: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 32.0),
-                  ElevatedButton.icon(
-                    onPressed: () {},
+                  const SizedBox(width: 8.0),
+                  IconButton(
+                    // FIX: Align width with text input
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(0.0, 48.0),
+                    ),
                     icon: const Icon(Icons.send),
-                    label: const Text('Send'),
+                    onPressed: () => ScaffoldMessenger.of(context)
+                        .showMaterialBanner(MaterialBanner(
+                      actions: [
+                        Builder(builder: (context) {
+                          return IconButton(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context)
+                                  .clearMaterialBanners();
+                            },
+                            icon: const Icon(Icons.close),
+                          );
+                        })
+                      ],
+                      content: const Text(
+                          'Message sending will be available soon...'),
+                    )),
                   )
                 ]),
               ),

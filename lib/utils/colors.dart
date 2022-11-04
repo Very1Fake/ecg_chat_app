@@ -8,3 +8,21 @@ Color darken(Color color, [double amount = .1]) {
 
   return hslDark.toColor();
 }
+
+Color lighten(Color color, [double amount = .1]) {
+  assert(amount >= 0 && amount <= 1);
+
+  final hsl = HSLColor.fromColor(color);
+  final hslLight = hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
+
+  return hslLight.toColor();
+}
+
+Color shiftLightness(Brightness brightness, Color color, [double amount = .1]) {
+  switch (brightness) {
+    case Brightness.dark:
+      return darken(color, amount);
+    case Brightness.light:
+      return lighten(color, amount);
+  }
+}

@@ -9,8 +9,10 @@ class PlayerListItem extends StatelessWidget {
 
   final bool selected;
 
+  final TextStyle? titleStyle;
+
   const PlayerListItem(this.account,
-      {this.selected = false, this.callback, super.key});
+      {this.selected = false, this.callback, this.titleStyle, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +20,10 @@ class PlayerListItem extends StatelessWidget {
       padding: const EdgeInsets.all(4.0),
       child: CircleAvatar(
         backgroundColor: Theme.of(context).colorScheme.primary,
-        child: const Icon(Icons.person),
+        child: Icon(
+          Icons.person,
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
       ),
     );
 
@@ -42,8 +47,8 @@ class PlayerListItem extends StatelessWidget {
               ],
             )
           : avatar,
-      title: Text(account.login),
-      onTap: () => callback != null ? callback!(account) : null,
+      title: Text(account.login, style: titleStyle),
+      onTap: callback != null ? () => callback!(account) : null,
     );
   }
 }

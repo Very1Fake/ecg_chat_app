@@ -1,55 +1,6 @@
 import 'package:flutter/material.dart';
 
 // TODO: Proper use at `Settings`
-enum ThemeColor {
-  system,
-  navy,
-  mint,
-  lavender,
-  caramel,
-  forest,
-  wine;
-
-  String asString() {
-    switch (this) {
-      case ThemeColor.system:
-        return "System";
-      case ThemeColor.navy:
-        return "Navy";
-      case ThemeColor.mint:
-        return "Mint";
-      case ThemeColor.lavender:
-        return "Lavender";
-      case ThemeColor.caramel:
-        return "Caramel";
-      case ThemeColor.forest:
-        return "Forest";
-      case ThemeColor.wine:
-        return "Wine";
-    }
-  }
-
-  Color toColor() {
-    switch (this) {
-      case ThemeColor.system:
-        return Colors.blue[500]!;
-      case ThemeColor.navy:
-        return const Color(0xFF45A0F2);
-      case ThemeColor.mint:
-        return const Color(0xFF2AB8B8);
-      case ThemeColor.lavender:
-        return const Color(0xFFB4ABF5);
-      case ThemeColor.caramel:
-        return const Color(0xFFF78204);
-      case ThemeColor.forest:
-        return const Color(0xFF00FFA9);
-      case ThemeColor.wine:
-        return const Color(0xFF894771);
-    }
-  }
-}
-
-// TODO: Proper use at `Settings`
 enum DiskRetention {
   oneDay,
   threeDays,

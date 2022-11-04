@@ -1,5 +1,4 @@
 import 'package:ecg_chat_app/models/message.dart';
-import 'package:ecg_chat_app/utils/settings.dart';
 import 'package:flutter/material.dart';
 
 class MessageBubble extends StatelessWidget {
@@ -19,11 +18,18 @@ class MessageBubble extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20.0),
               color: message.fromCurrentUser()
-                  ? ThemeColor.caramel.toColor()
-                  : Theme.of(context).primaryColorLight,
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.tertiary,
             ),
             padding: const EdgeInsets.all(12.0),
-            child: Text(message.text)),
+            child: Text(
+              message.text,
+              style: TextStyle(
+                color: message.fromCurrentUser()
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : Theme.of(context).colorScheme.onTertiary,
+              ),
+            )),
       ),
     );
   }
