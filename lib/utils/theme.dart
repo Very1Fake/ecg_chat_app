@@ -1,4 +1,3 @@
-// TODO: Proper use at `Settings`
 import 'package:flutter/material.dart';
 
 enum ThemeColor {

@@ -15,13 +15,16 @@ class ServerListItem extends StatelessWidget {
     String? description = server.description;
 
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        radius: 32.0,
-        child: const Icon(
-          Icons.broken_image_outlined,
-          color: Colors.white,
-          size: 28.0,
+      leading: Hero(
+        tag: 'server/${server.address}/logo',
+        child: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          radius: 32.0,
+          child: Icon(
+            Icons.broken_image_outlined,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+            size: 28.0,
+          ),
         ),
       ),
       title: Text(server.name),
