@@ -23,6 +23,29 @@ class _MainPageState extends State<MainPage> {
   bool accountManagerExpanded = false;
   int selectedTab = 0;
 
+  final ScrollController _scrollController = ScrollController();
+
+  changeSection(int section) {
+    if (selectedTab == section) {
+      // Scroll to top
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.minScrollExtent,
+          duration: const Duration(seconds: 1),
+          curve: Curves.easeInOut,
+        );
+      }
+    } else {
+      // Reset scroll position
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.minScrollExtent);
+      }
+      selectedTab = section;
+    }
+
+    setState(() {});
+  }
+
   Widget underConstruction(String text) {
     return Center(
       child: Column(
@@ -70,6 +93,7 @@ class _MainPageState extends State<MainPage> {
             ),
           )
         : ListView.builder(
+            controller: _scrollController,
             itemCount: favoritesCount,
             itemBuilder: (context, index) {
               Server server = serverList
@@ -77,7 +101,8 @@ class _MainPageState extends State<MainPage> {
                   .elementAt(index);
               return ServerListItem(
                   serverList.indexOf(server), server, showBottomSheet);
-            });
+            },
+          );
   }
 
   Future<bool?> showBottomSheet(int index, Server server) {
@@ -177,14 +202,14 @@ class _MainPageState extends State<MainPage> {
                       alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.all(16.0),
                       child: CircleAvatar(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                          radius: 32.0,
-                          child: Icon(
-                            Icons.person,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            size: 42.0,
-                          )),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        radius: 32.0,
+                        child: Icon(
+                          Icons.person,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          size: 42.0,
+                        ),
+                      ),
                     ),
                     accountList.length == 1
                         ? ListTile(
@@ -268,6 +293,7 @@ class _MainPageState extends State<MainPage> {
       ),
       body: [
         ListView.builder(
+          controller: _scrollController,
           prototypeItem: ServerListItem(0, Server.dummy(), showBottomSheet),
           itemCount: serverList.length,
           itemBuilder: (context, i) =>
@@ -287,9 +313,7 @@ class _MainPageState extends State<MainPage> {
           currentIndex: selectedTab,
           enableFeedback: true,
           showUnselectedLabels: false,
-          onTap: (index) => setState(() {
-                selectedTab = index;
-              }),
+          onTap: (index) => changeSection(index),
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.dns), label: "Servers"),
             BottomNavigationBarItem(

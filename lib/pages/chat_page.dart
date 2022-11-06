@@ -6,7 +6,6 @@ import 'package:ecg_chat_app/widgets/player_list_item.dart';
 import 'package:flutter/material.dart';
 
 import 'package:ecg_chat_app/models/server.dart';
-import 'package:flutter/services.dart';
 
 class ChatPageArgs {
   Server server;
@@ -30,8 +29,8 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    var args = ModalRoute.of(context)!.settings.arguments as ChatPageArgs;
-    server = args.server;
+    server =
+        (ModalRoute.of(context)!.settings.arguments as ChatPageArgs).server;
 
     Color textColor = AppTheme.useMaterial3
         ? Theme.of(context).colorScheme.onPrimaryContainer
@@ -85,7 +84,7 @@ class _ChatPageState extends State<ChatPage> {
                       color: textColor,
                     )),
                 Tab(
-                    text: 'Player',
+                    text: 'Players',
                     icon: Icon(
                       Icons.people,
                       color: textColor,
@@ -97,10 +96,11 @@ class _ChatPageState extends State<ChatPage> {
             Column(children: [
               Expanded(
                 child: ListView.builder(
-                    itemCount: messages.length,
-                    reverse: true,
-                    itemBuilder: (context, index) =>
-                        MessageBubble(messages[index])),
+                  itemCount: messages.length,
+                  reverse: true,
+                  itemBuilder: (context, index) =>
+                      MessageBubble(messages[index]),
+                ),
               ),
               Wrap(
                 alignment: WrapAlignment.center,
@@ -111,75 +111,75 @@ class _ChatPageState extends State<ChatPage> {
                       horizontal: 12.0,
                     ),
                     child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              maxLength: 256,
-                              maxLines: 5,
-                              minLines: 1,
-                              controller: messageController,
-                              decoration: InputDecoration(
-                                isDense: true,
-                                filled: true,
-                                fillColor: Theme.of(context).backgroundColor,
-                                hintText: 'Message',
-                                border: const OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(32.0)),
-                                ),
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            maxLength: 256,
+                            maxLines: 5,
+                            minLines: 1,
+                            controller: messageController,
+                            decoration: InputDecoration(
+                              isDense: true,
+                              filled: true,
+                              fillColor: Theme.of(context).backgroundColor,
+                              hintText: 'Message',
+                              border: const OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(32.0)),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8.0),
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 20.0),
-                            child: IconButton(
-                              style: IconButton.styleFrom(
-                                  fixedSize: const Size(52.0, 52.0),
-                                  focusColor: Theme.of(context)
+                        ),
+                        const SizedBox(width: 8.0),
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 20.0),
+                          child: IconButton(
+                            style: IconButton.styleFrom(
+                                fixedSize: const Size(52.0, 52.0),
+                                focusColor: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant
+                                    .withOpacity(.12),
+                                highlightColor: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(.12),
+                                side: BorderSide(
+                                  color: Theme.of(context).colorScheme.outline,
+                                )).copyWith(
+                              foregroundColor:
+                                  MaterialStateProperty.resolveWith(
+                                      (Set<MaterialState> states) {
+                                if (states.contains(MaterialState.pressed)) {
+                                  return Theme.of(context)
                                       .colorScheme
-                                      .onSurfaceVariant
-                                      .withOpacity(.12),
-                                  highlightColor: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withOpacity(.12),
-                                  side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.outline,
-                                  )).copyWith(
-                                foregroundColor:
-                                    MaterialStateProperty.resolveWith(
-                                        (Set<MaterialState> states) {
-                                  if (states.contains(MaterialState.pressed)) {
-                                    return Theme.of(context)
-                                        .colorScheme
-                                        .onSurface;
-                                  }
-                                  return null;
-                                }),
-                              ),
-                              icon: const Icon(Icons.send),
-                              onPressed: () => ScaffoldMessenger.of(context)
-                                  .showMaterialBanner(MaterialBanner(
-                                actions: [
-                                  Builder(builder: (context) {
-                                    return IconButton(
-                                      onPressed: () {
-                                        ScaffoldMessenger.of(context)
-                                            .clearMaterialBanners();
-                                      },
-                                      icon: const Icon(Icons.close),
-                                    );
-                                  })
-                                ],
-                                content: const Text(
-                                    'Message sending will be available soon...'),
-                              )),
+                                      .onSurface;
+                                }
+                                return null;
+                              }),
                             ),
-                          )
-                        ]),
+                            icon: const Icon(Icons.send),
+                            onPressed: () => ScaffoldMessenger.of(context)
+                                .showMaterialBanner(MaterialBanner(
+                              actions: [
+                                Builder(builder: (context) {
+                                  return IconButton(
+                                    onPressed: () {
+                                      ScaffoldMessenger.of(context)
+                                          .clearMaterialBanners();
+                                    },
+                                    icon: const Icon(Icons.close),
+                                  );
+                                })
+                              ],
+                              content: const Text(
+                                  'Message sending will be available soon...'),
+                            )),
+                          ),
+                        )
+                      ],
+                    ),
                   )
                 ],
               ),

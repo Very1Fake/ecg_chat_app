@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 // TODO: Proper use at `Settings`
 enum DiskRetention {
   oneDay,
