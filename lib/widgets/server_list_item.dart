@@ -27,7 +27,7 @@ class ServerListItem extends StatelessWidget {
           ),
         ),
       ),
-      title: Text(server.name),
+      title: Text(server.serverName),
       subtitle: description != null
           ? Text(description,
               style: TextStyle(color: Theme.of(context).colorScheme.primary))

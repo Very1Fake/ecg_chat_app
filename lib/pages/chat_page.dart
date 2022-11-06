@@ -58,9 +58,9 @@ class _ChatPageState extends State<ChatPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(server.name),
+                    Text(server.serverName), // FIX: Text overflow
                     Visibility(
-                        visible: true,
+                        visible: server.name != null,
                         child: Text(server.address,
                             style: const TextStyle(
                               fontSize: 11.0,

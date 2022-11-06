@@ -18,9 +18,9 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   List<Account> accountList = Account.randomList(Random().nextInt(4) + 1);
   int currentAccount = 0;
-  List<Server> serverList = Server.randomList(128);
 
   bool accountManagerExpanded = false;
+  bool needToScrollToBottom = false;
   int selectedTab = 0;
 
   final ScrollController _scrollController = ScrollController();
@@ -46,21 +46,21 @@ class _MainPageState extends State<MainPage> {
     setState(() {});
   }
 
-  Widget underConstruction(String text) {
+  Widget centeredContent(IconData icon, String text) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.precision_manufacturing_outlined,
-            size: 128.0,
+            icon,
+            size: 64.0,
             color: Theme.of(context).hintColor,
           ),
           Text(
             text,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 28.0,
+              fontSize: 24.0,
               color: Theme.of(context).hintColor,
             ),
           )
@@ -70,37 +70,20 @@ class _MainPageState extends State<MainPage> {
   }
 
   Widget sectionFavorites() {
-    int favoritesCount = serverList.where((server) => server.favorite).length;
+    int favoritesCount =
+        ServerManager().list.where((server) => server.favorite).length;
     return favoritesCount == 0
-        ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.format_list_bulleted,
-                  size: 64.0,
-                  color: Theme.of(context).hintColor,
-                ),
-                Text(
-                  'Favorite list is empty',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24.0,
-                    color: Theme.of(context).hintColor,
-                  ),
-                )
-              ],
-            ),
-          )
+        ? centeredContent(Icons.format_list_bulleted, 'Favorite list is empty')
         : ListView.builder(
             controller: _scrollController,
             itemCount: favoritesCount,
             itemBuilder: (context, index) {
-              Server server = serverList
+              Server server = ServerManager()
+                  .list
                   .where((server) => server.favorite)
                   .elementAt(index);
-              return ServerListItem(
-                  serverList.indexOf(server), server, showBottomSheet);
+              return ServerListItem(ServerManager().list.indexOf(server),
+                  server, showBottomSheet);
             },
           );
   }
@@ -167,7 +150,7 @@ class _MainPageState extends State<MainPage> {
               textColor: Theme.of(context).colorScheme.error,
               onTap: () {
                 setState(() {
-                  serverList.removeAt(index);
+                  ServerManager().list.removeAt(index);
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('"${server.name}" removed')));
@@ -186,6 +169,7 @@ class _MainPageState extends State<MainPage> {
       appBar: AppBar(
         title: const Text("Server List"),
       ),
+      drawerEdgeDragWidth: MediaQuery.of(context).size.width,
       drawer: Drawer(
         child: ListView(
           padding: const EdgeInsets.all(0.0),
@@ -286,6 +270,7 @@ class _MainPageState extends State<MainPage> {
                 applicationIcon: appIcon,
                 applicationName: appName,
                 applicationVersion: appVersion,
+                applicationLegalese: applicationLegalese,
               ),
             )
           ],
@@ -295,20 +280,26 @@ class _MainPageState extends State<MainPage> {
         ListView.builder(
           controller: _scrollController,
           prototypeItem: ServerListItem(0, Server.dummy(), showBottomSheet),
-          itemCount: serverList.length,
+          itemCount: ServerManager().list.length,
           itemBuilder: (context, i) =>
-              ServerListItem(i, serverList[i], showBottomSheet),
+              ServerListItem(i, ServerManager().list[i], showBottomSheet),
         ),
         sectionFavorites(),
-        underConstruction("This section will implemented in future updates"),
+        centeredContent(
+          Icons.precision_manufacturing_outlined,
+          "This section will implemented in future updates",
+        ),
       ][selectedTab],
       floatingActionButton: FloatingActionButton(
           child: const Icon(Icons.add),
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text("Adding new server is not implemented yet..."),
-            ));
-          }),
+          onPressed: () =>
+              Navigator.of(context).pushNamed('/new_server').then((result) {
+                var server = result as Server?;
+                if (server != null) {
+                  // TODO: Scroll to newly added server
+                  setState(() => ServerManager().list.add(server));
+                }
+              })),
       bottomNavigationBar: BottomNavigationBar(
           currentIndex: selectedTab,
           enableFeedback: true,

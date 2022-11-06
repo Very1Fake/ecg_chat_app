@@ -232,6 +232,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 applicationIcon: appIcon,
                 applicationName: appName,
                 applicationVersion: appVersion,
+                applicationLegalese: applicationLegalese,
               ),
             )
           ]),
