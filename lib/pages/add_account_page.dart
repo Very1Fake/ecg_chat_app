@@ -28,7 +28,7 @@ enum Stage {
 enum InvalidUsername {
   none,
   format,
-  exists;
+  taken;
 
   String? get string {
     switch (this) {
@@ -36,8 +36,25 @@ enum InvalidUsername {
         return null;
       case InvalidUsername.format:
         return 'Minimum username length is 3';
-      case InvalidUsername.exists:
-        return 'Account with this username is already added to the app';
+      case InvalidUsername.taken:
+        return 'Account with this username is already taken';
+    }
+  }
+}
+
+enum InvalidEmail {
+  none,
+  format,
+  taken;
+
+  String? get string {
+    switch (this) {
+      case InvalidEmail.none:
+        return null;
+      case InvalidEmail.format:
+        return 'Make sure you entered valid email';
+      case InvalidEmail.taken:
+        return 'Account for this email already exists';
     }
   }
 }
@@ -52,7 +69,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
   Stage stage = Stage.askUsername;
 
   InvalidUsername invalidUsername = InvalidUsername.none;
-  bool invalidEmail = false;
+  InvalidEmail invalidEmail = InvalidEmail.none;
   bool invalidPassword = false;
   bool invalidPasswordRepeat = false;
 
@@ -128,7 +145,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
                       child: (details.stepIndex == Stage.confirm.index)
                           ? const Text('Back')
                           : const Text('Cancel')),
-                const SizedBox(width: 16.0),
+                const SizedBox(width: 8.0),
                 TextButton(
                   onPressed: details.onStepContinue,
                   child: (details.stepIndex == Stage.confirm.index)
@@ -154,7 +171,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
                 if (AccountManager()
                     .accountList
                     .any((account) => account.username == username)) {
-                  invalidUsername = InvalidUsername.exists;
+                  invalidUsername = InvalidUsername.taken;
                 } else {
                   if (Random().nextBool()) {
                     action = Action.signIn;
@@ -171,11 +188,18 @@ class _NewAccountPageState extends State<NewAccountPage> {
 
               break;
             case Stage.askEmail:
-              if (inputEmail.text.trim().isValidEmail()) {
-                invalidEmail = false;
-                next();
+              var email = inputEmail.text.trim();
+              if (email.isValidEmail()) {
+                if (AccountManager()
+                    .accountList
+                    .any((account) => account.email == email)) {
+                  invalidEmail = InvalidEmail.taken;
+                } else {
+                  invalidEmail = InvalidEmail.none;
+                  next();
+                }
               } else {
-                invalidEmail = true;
+                invalidEmail = InvalidEmail.format;
               }
 
               break;
@@ -246,9 +270,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
                     hintMaxLines: 1,
                     hintText: 'mail@example.com',
                     errorMaxLines: 2,
-                    errorText: invalidEmail
-                        ? 'Make sure you entered valid email'
-                        : null,
+                    errorText: invalidEmail.string,
                   ),
                   keyboardType: TextInputType.emailAddress,
                   controller: inputEmail,
@@ -304,10 +326,12 @@ class _NewAccountPageState extends State<NewAccountPage> {
           Step(
             isActive: stage == Stage.confirm,
             title: const Text('Confirmation'),
-            content: (action == Action.signIn)
-                ? Text("Add @${inputUsername.text} account to this app?")
-                : Text(
-                    "Are you sure you want to create new account @${inputUsername.text} on ${inputEmail.text} email"),
+            content: Align(
+                alignment: Alignment.centerLeft,
+                child: (action == Action.signIn)
+                    ? Text("Add @${inputUsername.text} account to this app?")
+                    : Text(
+                        "Are you sure you want to create new account @${inputUsername.text} for ${inputEmail.text} email?")),
           ),
         ],
       ),

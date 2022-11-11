@@ -4,6 +4,7 @@ import 'package:ecg_chat_app/models/account.dart';
 import 'package:ecg_chat_app/models/server.dart';
 import 'package:ecg_chat_app/utils/colors.dart';
 import 'package:ecg_chat_app/utils/consts.dart';
+import 'package:ecg_chat_app/widgets/avatar.dart';
 import 'package:ecg_chat_app/widgets/player_list_item.dart';
 import 'package:ecg_chat_app/widgets/server_list_item.dart';
 import 'package:flutter/material.dart';
@@ -242,12 +243,10 @@ class _MainPageState extends State<MainPage> {
                         ..add(ListTile(
                           leading: Container(
                             padding: const EdgeInsets.all(4.0),
-                            child: CircleAvatar(
-                              backgroundColor: Colors.transparent,
-                              child: Icon(
-                                Icons.add,
-                                color: theme.colorScheme.onPrimaryContainer,
-                              ),
+                            child: const Avatar(
+                              icon: Icons.add,
+                              container: true,
+                              transparent: true,
                             ),
                           ),
                           title: const Text("Add Account"),

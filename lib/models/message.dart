@@ -12,7 +12,7 @@ class Message {
   Message(this.text, [this.sender, timestamp])
       : timestamp = timestamp ?? DateTime.now();
 
-  bool fromMe() {
+  bool get isMine {
     return sender == null;
   }
 
@@ -25,7 +25,9 @@ class Message {
       lastDate = lastDate.subtract(Duration(seconds: random.nextInt(2048)));
 
       return Message(
-          WordPair.random().asPascalCase,
+          List.generate(
+                  random.nextInt(5) + 1, (_) => WordPair.random().asString)
+              .join(' '),
           random.nextBool()
               ? players[random.nextInt(players.length - 1)]
               : null,

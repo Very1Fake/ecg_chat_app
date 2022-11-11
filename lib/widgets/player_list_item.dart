@@ -1,4 +1,5 @@
 import 'package:ecg_chat_app/models/player.dart';
+import 'package:ecg_chat_app/widgets/avatar.dart';
 import 'package:flutter/material.dart';
 
 typedef Callback = void Function(Player);
@@ -18,13 +19,7 @@ class PlayerListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget avatar = Container(
       padding: const EdgeInsets.all(4.0),
-      child: CircleAvatar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        child: Icon(
-          Icons.person,
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
-      ),
+      child: const Avatar(),
     );
 
     return ListTile(

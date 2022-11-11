@@ -10,61 +10,84 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool fromMe = message.fromMe();
+    ThemeData theme = Theme.of(context);
 
     return Container(
-      margin: const EdgeInsets.all(8.0),
-      child: Align(
-        alignment: fromMe ? Alignment.centerRight : Alignment.centerLeft,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20.0),
-            color: message.fromMe()
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.tertiary,
-          ),
-          child: Stack(
-            alignment: fromMe ? Alignment.bottomRight : Alignment.bottomLeft,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.0),
+        color: message.isMine
+            ? theme.colorScheme.primaryContainer
+            : theme.colorScheme.tertiaryContainer,
+      ),
+      constraints: const BoxConstraints(
+        maxWidth: 300.0,
+        minWidth: 72.0,
+      ),
+      child: Stack(
+        alignment:
+            message.isMine ? Alignment.bottomLeft : Alignment.bottomRight,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.only(
-                  top: 12.0,
+              if (!message.isMine)
+                Container(
+                  margin: const EdgeInsets.only(
+                    top: 2.0,
+                    left: 12.0,
+                    right: 12.0,
+                  ),
+                  child: Text(
+                    message.sender!.username,
+                    style: TextStyle(
+                      color: theme.colorScheme.tertiary,
+                      fontSize: 13.0,
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: EdgeInsets.only(
+                  top: message.isMine ? 12.0 : 0,
                   left: 12.0,
                   right: 12.0,
                   bottom: 14.0,
                 ),
                 child: Text(
                   message.text,
-                  style: TextStyle(
-                    color: fromMe
-                        ? Theme.of(context).colorScheme.onPrimary
-                        : Theme.of(context).colorScheme.onTertiary,
-                  ),
-                ),
-              ),
-              Container(
-                margin: EdgeInsets.only(
-                  right: fromMe ? 12.0 : 0.0,
-                  left: !fromMe ? 12.0 : 0.0,
-                  bottom: 2.0,
-                ),
-                child: Text(
-                  DateFormat('Hm').format(message.timestamp),
+                  // overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: shiftLightness(
-                      Theme.of(context).brightness,
-                      fromMe
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.tertiary,
-                      .3,
-                    ),
-                    fontSize: 11.0,
+                        theme.brightness,
+                        theme.brightness == Brightness.light
+                            ? Colors.black
+                            : Colors.white,
+                        .05),
                   ),
                 ),
               ),
             ],
           ),
-        ),
+          Container(
+            margin: EdgeInsets.only(
+              right: !message.isMine ? 12.0 : 0.0,
+              left: message.isMine ? 12.0 : 0.0,
+              bottom: 2.0,
+            ),
+            child: Text(
+              DateFormat('Hm').format(message.timestamp),
+              style: TextStyle(
+                color: shiftLightness(
+                  theme.brightness,
+                  message.isMine
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.tertiary,
+                  .3,
+                ),
+                fontSize: 10.5,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -2,10 +2,12 @@ import 'package:ecg_chat_app/models/message.dart';
 import 'package:ecg_chat_app/models/player.dart';
 import 'package:ecg_chat_app/utils/theme.dart';
 import 'package:ecg_chat_app/widgets/message_bubble.dart';
+import 'package:ecg_chat_app/widgets/avatar.dart';
 import 'package:ecg_chat_app/widgets/player_list_item.dart';
 import 'package:flutter/material.dart';
 
 import 'package:ecg_chat_app/models/server.dart';
+import 'package:flutter/services.dart';
 
 class ChatPageArgs {
   Server server;
@@ -27,6 +29,22 @@ class _ChatPageState extends State<ChatPage> {
 
   TextEditingController messageController = TextEditingController();
 
+  showBannerMessage(String message) {
+    ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
+      actions: [
+        Builder(builder: (context) {
+          return IconButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).clearMaterialBanners();
+            },
+            icon: const Icon(Icons.close),
+          );
+        })
+      ],
+      content: Text(message),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     server =
@@ -44,13 +62,9 @@ class _ChatPageState extends State<ChatPage> {
             children: [
               Hero(
                 tag: 'server/${server.address}/logo',
-                child: CircleAvatar(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primaryContainer,
-                  child: Icon(
-                    Icons.broken_image_outlined,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
+                child: const Avatar(
+                  icon: Icons.broken_image_outlined,
+                  container: true,
                 ),
               ),
               const SizedBox(width: 16.0),
@@ -96,93 +110,119 @@ class _ChatPageState extends State<ChatPage> {
             Column(children: [
               Expanded(
                 child: ListView.builder(
-                  itemCount: messages.length,
-                  reverse: true,
-                  itemBuilder: (context, index) =>
-                      MessageBubble(messages[index]),
-                ),
-              ),
-              Wrap(
-                alignment: WrapAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 8.0,
-                      horizontal: 12.0,
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            maxLength: 256,
-                            maxLines: 5,
-                            minLines: 1,
-                            controller: messageController,
-                            decoration: InputDecoration(
-                              isDense: true,
-                              filled: true,
-                              fillColor: Theme.of(context).backgroundColor,
-                              hintText: 'Message',
-                              border: const OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(32.0)),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    itemCount: messages.length,
+                    reverse: true,
+                    itemBuilder: (context, index) {
+                      Message message = messages[index];
+
+                      return GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: () => showDialog(
+                          context: context,
+                          builder: (context) => SimpleDialog(
+                            children: [
+                              SimpleDialogOption(
+                                child: const Text('Copy'),
+                                onPressed: () async {
+                                  Clipboard.setData(
+                                    ClipboardData(text: message.text),
+                                  );
+                                  Navigator.of(context).pop();
+                                },
                               ),
-                            ),
+                              SimpleDialogOption(
+                                child: const Text('Delete'),
+                                onPressed: () {
+                                  showBannerMessage(
+                                      'Delete message feature will added soon...');
+                                  Navigator.of(context).pop();
+                                },
+                              )
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 8.0),
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 20.0),
-                          child: IconButton(
-                            style: IconButton.styleFrom(
-                                fixedSize: const Size(52.0, 52.0),
-                                focusColor: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant
-                                    .withOpacity(.12),
-                                highlightColor: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(.12),
-                                side: BorderSide(
-                                  color: Theme.of(context).colorScheme.outline,
-                                )).copyWith(
-                              foregroundColor:
-                                  MaterialStateProperty.resolveWith(
-                                      (Set<MaterialState> states) {
-                                if (states.contains(MaterialState.pressed)) {
-                                  return Theme.of(context)
-                                      .colorScheme
-                                      .onSurface;
-                                }
-                                return null;
-                              }),
-                            ),
-                            icon: const Icon(Icons.send),
-                            onPressed: () => ScaffoldMessenger.of(context)
-                                .showMaterialBanner(MaterialBanner(
-                              actions: [
-                                Builder(builder: (context) {
-                                  return IconButton(
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(context)
-                                          .clearMaterialBanners();
-                                    },
-                                    icon: const Icon(Icons.close),
-                                  );
-                                })
-                              ],
-                              content: const Text(
-                                  'Message sending will be available soon...'),
-                            )),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Row(
+                            mainAxisAlignment: message.isMine
+                                ? MainAxisAlignment.end
+                                : MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              if (!message.isMine)
+                                const Avatar()
+                              else
+                                const Flexible(flex: 1, child: SizedBox()),
+                              if (!message.isMine) const SizedBox(width: 8.0),
+                              Flexible(flex: 3, child: MessageBubble(message)),
+                              if (!message.isMine)
+                                const Flexible(flex: 1, child: SizedBox()),
+                            ],
                           ),
-                        )
-                      ],
-                    ),
-                  )
-                ],
+                        ),
+                      );
+                    }),
               ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8.0,
+                  horizontal: 12.0,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        maxLength: 256,
+                        maxLines: 3,
+                        minLines: 1,
+                        controller: messageController,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          filled: true,
+                          fillColor: Theme.of(context).backgroundColor,
+                          hintText: 'Message',
+                          border: const OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(32.0)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8.0),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 23.0),
+                      child: IconButton(
+                        style: IconButton.styleFrom(
+                            fixedSize: const Size(50.0, 50.0),
+                            focusColor: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withOpacity(.12),
+                            highlightColor: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(.12),
+                            side: BorderSide(
+                              color: Theme.of(context).colorScheme.outline,
+                            )).copyWith(
+                          foregroundColor: MaterialStateProperty.resolveWith(
+                              (Set<MaterialState> states) {
+                            if (states.contains(MaterialState.pressed)) {
+                              return Theme.of(context).colorScheme.onSurface;
+                            }
+                            return null;
+                          }),
+                        ),
+                        icon: const Icon(Icons.send),
+                        onPressed: () => showBannerMessage(
+                            'Message sending will be available soon...'),
+                      ),
+                    )
+                  ],
+                ),
+              )
             ]),
             ListView.builder(
                 itemCount: players.length,
