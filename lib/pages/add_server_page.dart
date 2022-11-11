@@ -4,14 +4,15 @@ import 'package:ecg_chat_app/models/server.dart';
 import 'package:ecg_chat_app/widgets/bottom_progress_indicator.dart';
 import 'package:flutter/material.dart';
 
-class NewServerPage extends StatefulWidget {
-  const NewServerPage({super.key});
+class AddServerPage extends StatefulWidget {
+  const AddServerPage({super.key});
 
   @override
-  State<NewServerPage> createState() => _NewServerPageState();
+  State<AddServerPage> createState() => _AddServerPageState();
 }
 
-class _NewServerPageState extends State<NewServerPage> {
+class _AddServerPageState extends State<AddServerPage> {
+  // TODO: Use form
   TextEditingController inputAlias = TextEditingController();
   TextEditingController inputAddress = TextEditingController();
   TextEditingController inputPort = TextEditingController(text: '4567');
@@ -21,14 +22,11 @@ class _NewServerPageState extends State<NewServerPage> {
   bool invalidAddress = false;
   bool invalidPort = false;
 
-  // Future<Null>? checkServer;
-
   @override
   void dispose() {
     inputAlias.dispose();
     inputAddress.dispose();
     inputPort.dispose();
-    // checkserver.;
     super.dispose();
   }
 
@@ -158,7 +156,7 @@ Do you still want to add it to your server list?'''),
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add new server"),
+        title: const Text("Add server"),
         bottom: loadingServer ? const BottomProgressIndicator() : null,
       ),
       body: Padding(

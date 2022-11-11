@@ -47,7 +47,7 @@ class PlayerListItem extends StatelessWidget {
               ],
             )
           : avatar,
-      title: Text(account.login, style: titleStyle),
+      title: Text(account.username, style: titleStyle),
       onTap: callback != null ? () => callback!(account) : null,
     );
   }

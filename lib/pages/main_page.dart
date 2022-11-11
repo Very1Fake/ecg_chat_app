@@ -16,9 +16,6 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  List<Account> accountList = Account.randomList(Random().nextInt(4) + 1);
-  int currentAccount = 0;
-
   bool accountManagerExpanded = false;
   bool needToScrollToBottom = false;
   int selectedTab = 0;
@@ -44,6 +41,19 @@ class _MainPageState extends State<MainPage> {
     }
 
     setState(() {});
+  }
+
+  addServer([replace = false]) {
+    (replace
+            ? Navigator.of(context).popAndPushNamed('/add_server')
+            : Navigator.of(context).pushNamed('/add_server'))
+        .then((result) {
+      var server = result as Server?;
+      if (server != null) {
+        // TODO: Scroll to newly added server
+        setState(() => ServerManager().list.add(server));
+      }
+    });
   }
 
   Widget centeredContent(IconData icon, String text) {
@@ -89,6 +99,8 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future<bool?> showBottomSheet(int index, Server server) {
+    var theme = Theme.of(context);
+
     return showModalBottomSheet(
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(32.0))),
@@ -99,7 +111,7 @@ class _MainPageState extends State<MainPage> {
             width: 64.0,
             height: 4.0,
             decoration: BoxDecoration(
-              color: Theme.of(context).hintColor,
+              color: theme.hintColor,
               borderRadius: const BorderRadius.all(Radius.circular(20.0)),
             ),
             margin: const EdgeInsets.symmetric(vertical: 14.0),
@@ -107,7 +119,7 @@ class _MainPageState extends State<MainPage> {
           ListTile(
               leading: const Icon(Icons.info_outline),
               title: const Text("About server"),
-              iconColor: Theme.of(context).colorScheme.primary,
+              iconColor: theme.colorScheme.primary,
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text(
@@ -117,7 +129,7 @@ class _MainPageState extends State<MainPage> {
           ListTile(
               leading: const Icon(Icons.push_pin),
               title: const Text("Pin"),
-              iconColor: Theme.of(context).colorScheme.primary,
+              iconColor: theme.colorScheme.primary,
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text(
@@ -131,7 +143,7 @@ class _MainPageState extends State<MainPage> {
               title: server.favorite
                   ? const Text("Remove from favorites")
                   : const Text("Add to favorites"),
-              iconColor: Theme.of(context).colorScheme.primary,
+              iconColor: theme.colorScheme.primary,
               onTap: () {
                 // Change favorite status and request update
                 setState(() {
@@ -146,8 +158,8 @@ class _MainPageState extends State<MainPage> {
           ListTile(
               leading: const Icon(Icons.delete),
               title: const Text("Remove server"),
-              iconColor: Theme.of(context).colorScheme.error,
-              textColor: Theme.of(context).colorScheme.error,
+              iconColor: theme.colorScheme.error,
+              textColor: theme.colorScheme.error,
               onTap: () {
                 setState(() {
                   ServerManager().list.removeAt(index);
@@ -163,7 +175,10 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    Account account = accountList[currentAccount];
+    var accountList = AccountManager().accountList;
+    var account = AccountManager().account;
+
+    var theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -176,8 +191,8 @@ class _MainPageState extends State<MainPage> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: shiftLightness(Theme.of(context).brightness,
-                    Theme.of(context).colorScheme.primaryContainer, 0.0225),
+                color: shiftLightness(theme.brightness,
+                    theme.colorScheme.primaryContainer, 0.0225),
               ),
               child: SafeArea(
                 child: Column(
@@ -186,68 +201,68 @@ class _MainPageState extends State<MainPage> {
                       alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.all(16.0),
                       child: CircleAvatar(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        backgroundColor: theme.colorScheme.primary,
                         radius: 32.0,
                         child: Icon(
                           Icons.person,
-                          color: Theme.of(context).colorScheme.onPrimary,
+                          color: theme.colorScheme.onPrimary,
                           size: 42.0,
                         ),
                       ),
                     ),
-                    accountList.length == 1
-                        ? ListTile(
-                            title: Text(
-                              account.login,
-                              // style: Theme.of(context).primaryTextTheme.titleSmall,
-                              style: TextStyle(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer),
+                    ExpansionTile(
+                      title: Text(
+                        account.username,
+                        style: theme.textTheme.titleSmall,
+                      ),
+                      subtitle: Text(
+                        account.email,
+                        style:
+                            theme.textTheme.caption?.copyWith(fontSize: 12.5),
+                      ),
+                      initiallyExpanded: accountManagerExpanded,
+                      childrenPadding:
+                          const EdgeInsets.symmetric(vertical: 4.0),
+                      onExpansionChanged: (value) => setState(() =>
+                          accountManagerExpanded = !accountManagerExpanded),
+                      children: List.generate(
+                          accountList.length,
+                          (index) => PlayerListItem(
+                                accountList[index].toPlayer(),
+                                selected: index == AccountManager().selected,
+                                callback: index != AccountManager().selected
+                                    ? (_) {
+                                        setState(() =>
+                                            AccountManager().selected = index);
+                                        Navigator.of(context).pop();
+                                      }
+                                    : null,
+                                titleStyle: theme.textTheme.titleSmall,
+                              ))
+                        ..add(ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(4.0),
+                            child: CircleAvatar(
+                              backgroundColor: Colors.transparent,
+                              child: Icon(
+                                Icons.add,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
                             ),
-                            subtitle: Text(
-                              account.email,
-                              style: Theme.of(context).primaryTextTheme.caption,
-                            ),
-                          )
-                        : ExpansionTile(
-                            title: Text(
-                              account.login,
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                            subtitle: Text(
-                              account.email,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .caption
-                                  ?.copyWith(fontSize: 12.5),
-                            ),
-                            initiallyExpanded: accountManagerExpanded,
-                            childrenPadding:
-                                const EdgeInsets.symmetric(vertical: 4.0),
-                            onExpansionChanged: (value) => setState(() =>
-                                accountManagerExpanded =
-                                    !accountManagerExpanded),
-                            children: List.generate(
-                                accountList.length,
-                                (index) => PlayerListItem(
-                                      accountList[index].toPlayer(),
-                                      selected: index == currentAccount,
-                                      callback: index != currentAccount
-                                          ? (_) {
-                                              setState(
-                                                  () => currentAccount = index);
-                                              Navigator.of(context).pop();
-                                            }
-                                          : null,
-                                      titleStyle: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall,
-                                    )),
                           ),
+                          title: const Text("Add Account"),
+                          onTap: () =>
+                              Navigator.of(context).pushNamed('/add_account'),
+                        )),
+                    ),
                   ],
                 ),
               ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.add),
+              title: const Text('New Server'),
+              onTap: () => addServer(true),
             ),
             ListTile(
               leading: const Icon(Icons.person_off),
@@ -291,15 +306,9 @@ class _MainPageState extends State<MainPage> {
         ),
       ][selectedTab],
       floatingActionButton: FloatingActionButton(
-          child: const Icon(Icons.add),
-          onPressed: () =>
-              Navigator.of(context).pushNamed('/new_server').then((result) {
-                var server = result as Server?;
-                if (server != null) {
-                  // TODO: Scroll to newly added server
-                  setState(() => ServerManager().list.add(server));
-                }
-              })),
+        child: const Icon(Icons.add),
+        onPressed: () => addServer(),
+      ),
       bottomNavigationBar: BottomNavigationBar(
           currentIndex: selectedTab,
           enableFeedback: true,

@@ -1,3 +1,4 @@
+import 'package:ecg_chat_app/models/account.dart';
 import 'package:ecg_chat_app/utils/consts.dart';
 import 'package:ecg_chat_app/utils/settings.dart';
 import 'package:ecg_chat_app/utils/theme.dart';
@@ -141,6 +142,17 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 16.0),
         children: [
+          buildSection("Account", [
+            ListTile(
+              title: const Text("Log Out"),
+              onTap: () {
+                if (AccountManager().logOut(context)) {
+                  Navigator.of(context).pop();
+                }
+                // setState(() {});
+              },
+            ),
+          ]),
           buildSection("Interface", [
             SwitchListTile(
                 title: const Text("Material You Theme"),
