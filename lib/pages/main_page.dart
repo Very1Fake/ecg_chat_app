@@ -5,6 +5,7 @@ import 'package:ecg_chat_app/models/server.dart';
 import 'package:ecg_chat_app/utils/colors.dart';
 import 'package:ecg_chat_app/utils/consts.dart';
 import 'package:ecg_chat_app/widgets/avatar.dart';
+import 'package:ecg_chat_app/widgets/centered_icon_message.dart';
 import 'package:ecg_chat_app/widgets/player_list_item.dart';
 import 'package:ecg_chat_app/widgets/server_list_item.dart';
 import 'package:flutter/material.dart';
@@ -57,34 +58,12 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  Widget centeredContent(IconData icon, String text) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 64.0,
-            color: Theme.of(context).hintColor,
-          ),
-          Text(
-            text,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 24.0,
-              color: Theme.of(context).hintColor,
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
   Widget sectionFavorites() {
     int favoritesCount =
         ServerManager().list.where((server) => server.favorite).length;
     return favoritesCount == 0
-        ? centeredContent(Icons.format_list_bulleted, 'Favorite list is empty')
+        ? const CenteredIconMessage(
+            Icons.format_list_bulleted, 'Favorite list is empty')
         : ListView.builder(
             controller: _scrollController,
             itemCount: favoritesCount,
@@ -265,10 +244,8 @@ class _MainPageState extends State<MainPage> {
             ),
             ListTile(
               leading: const Icon(Icons.person_off),
-              title: const Text('Blacklist'),
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text("Blacklist will be implemented soon..."))),
+              title: const Text('Block List'),
+              onTap: () => Navigator.of(context).pushNamed('/block_list'),
             ),
             ListTile(
               leading: const Icon(Icons.settings),
@@ -299,7 +276,7 @@ class _MainPageState extends State<MainPage> {
               ServerListItem(i, ServerManager().list[i], showBottomSheet),
         ),
         sectionFavorites(),
-        centeredContent(
+        const CenteredIconMessage(
           Icons.precision_manufacturing_outlined,
           "This section will implemented in future updates",
         ),

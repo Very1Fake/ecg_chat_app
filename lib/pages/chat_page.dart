@@ -45,6 +45,62 @@ class _ChatPageState extends State<ChatPage> {
     ));
   }
 
+  Future<void> showBottomSheet(Player player) {
+    var theme = Theme.of(context);
+
+    return showModalBottomSheet(
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32.0))),
+      context: context,
+      builder: (context) => Column(
+        children: [
+          Container(
+            width: 64.0,
+            height: 4.0,
+            decoration: BoxDecoration(
+              color: theme.hintColor,
+              borderRadius: const BorderRadius.all(Radius.circular(20.0)),
+            ),
+            margin: const EdgeInsets.symmetric(vertical: 14.0),
+          ),
+          ListTile(
+              leading: const Icon(Icons.person),
+              title: Text("@${player.username}"),
+              iconColor: theme.colorScheme.primary,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text(
+                        'ServerInfoPage will be added in future updates')));
+                Navigator.of(context).pop();
+              }),
+          const Divider(thickness: .5),
+          ListTile(
+              leading: const Icon(Icons.alternate_email),
+              title: const Text('Mention'),
+              iconColor: theme.colorScheme.primary,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text(
+                        'Mention feature will be available future updates')));
+                Navigator.of(context).pop();
+              }),
+          ListTile(
+              leading: const Icon(Icons.person_off),
+              title: const Text("Block"),
+              iconColor: theme.colorScheme.error,
+              textColor: theme.colorScheme.error,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content:
+                        Text('Adding player to the block list will be available'
+                            'in future update')));
+                Navigator.of(context).pop();
+              })
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     server =
@@ -226,7 +282,10 @@ class _ChatPageState extends State<ChatPage> {
             ]),
             ListView.builder(
                 itemCount: players.length,
-                itemBuilder: (context, index) => PlayerListItem(players[index]))
+                itemBuilder: (context, index) => PlayerListItem(
+                      players[index],
+                      longCallback: showBottomSheet,
+                    ))
           ],
         ),
       ),

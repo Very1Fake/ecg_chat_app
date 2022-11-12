@@ -3,17 +3,23 @@ import 'package:ecg_chat_app/widgets/avatar.dart';
 import 'package:flutter/material.dart';
 
 typedef Callback = void Function(Player);
+typedef LongCallback = Future<void> Function(Player);
 
 class PlayerListItem extends StatelessWidget {
-  final Player account;
+  final Player player;
   final Callback? callback;
+  final LongCallback? longCallback;
 
   final bool selected;
 
   final TextStyle? titleStyle;
 
-  const PlayerListItem(this.account,
-      {this.selected = false, this.callback, this.titleStyle, super.key});
+  const PlayerListItem(this.player,
+      {this.selected = false,
+      this.callback,
+      this.longCallback,
+      this.titleStyle,
+      super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +48,9 @@ class PlayerListItem extends StatelessWidget {
               ],
             )
           : avatar,
-      title: Text(account.username, style: titleStyle),
-      onTap: callback != null ? () => callback!(account) : null,
+      title: Text(player.username, style: titleStyle),
+      onTap: callback != null ? () => callback!(player) : null,
+      onLongPress: longCallback != null ? () => longCallback!(player) : null,
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:ecg_chat_app/models/account.dart';
 import 'package:ecg_chat_app/models/server.dart';
 import 'package:ecg_chat_app/pages/add_account_page.dart';
 import 'package:ecg_chat_app/pages/add_server_page.dart';
+import 'package:ecg_chat_app/pages/block_list_page.dart';
 import 'package:ecg_chat_app/pages/chat_page.dart';
 import 'package:ecg_chat_app/pages/main_page.dart';
 import 'package:ecg_chat_app/pages/settings_page.dart';
@@ -33,6 +34,7 @@ class ChatApp extends StatelessWidget {
         '/chat': (context) => const ChatPage(),
         '/add_server': (context) => const AddServerPage(),
         '/add_account': (context) => const NewAccountPage(),
+        '/block_list': (context) => const BlockListPage(),
         '/settings': (context) => const SettingsPage(),
       },
     );
