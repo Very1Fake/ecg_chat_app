@@ -176,7 +176,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 margin: const EdgeInsets.only(top: 4.0, bottom: 8.0),
                 child: Text(
                   "Keep data for",
-                  style: Theme.of(context).primaryTextTheme.titleSmall,
+                  style: Theme.of(context).textTheme.titleSmall,
                 )),
             Slider(
                 // FIX: Find better design

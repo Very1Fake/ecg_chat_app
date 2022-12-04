@@ -20,29 +20,24 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   bool accountManagerExpanded = false;
   bool needToScrollToBottom = false;
-  int selectedTab = 0;
+  int section = 0;
 
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController scrollController =
+      ScrollController(keepScrollOffset: true);
 
-  changeSection(int section) {
-    if (selectedTab == section) {
-      // Scroll to top
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.minScrollExtent,
-          duration: const Duration(seconds: 1),
-          curve: Curves.easeInOut,
-        );
-      }
+  changeSection(int newSection) {
+    // Scroll to top if current section
+    if (newSection == section) {
+      if (!scrollController.hasClients) return;
+
+      scrollController.animateTo(
+        scrollController.position.minScrollExtent,
+        duration: const Duration(seconds: 1),
+        curve: Curves.easeInOut,
+      );
     } else {
-      // Reset scroll position
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.minScrollExtent);
-      }
-      selectedTab = section;
+      setState(() => section = newSection);
     }
-
-    setState(() {});
   }
 
   addServer([replace = false]) {
@@ -65,7 +60,9 @@ class _MainPageState extends State<MainPage> {
         ? const CenteredIconMessage(
             Icons.format_list_bulleted, 'Favorite list is empty')
         : ListView.builder(
-            controller: _scrollController,
+            key: const PageStorageKey("MainPageScroll>Favorites"),
+            controller: scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
             itemCount: favoritesCount,
             itemBuilder: (context, index) {
               Server server = ServerManager()
@@ -267,26 +264,45 @@ class _MainPageState extends State<MainPage> {
           ],
         ),
       ),
-      body: [
-        ListView.builder(
-          controller: _scrollController,
-          prototypeItem: ServerListItem(0, Server.dummy(), showBottomSheet),
-          itemCount: ServerManager().list.length,
-          itemBuilder: (context, i) =>
-              ServerListItem(i, ServerManager().list[i], showBottomSheet),
-        ),
-        sectionFavorites(),
-        const CenteredIconMessage(
-          Icons.precision_manufacturing_outlined,
-          "This section will implemented in future updates",
-        ),
-      ][selectedTab],
+      body: RefreshIndicator(
+        color: theme.colorScheme.onSurfaceVariant,
+        backgroundColor: theme.colorScheme.surfaceVariant,
+        onRefresh: () async =>
+            Future.delayed(const Duration(seconds: 1)).then((value) {
+          if (mounted) {
+            for (final server in section == 0
+                ? ServerManager().list
+                : section == 1
+                    ? ServerManager().list.where((server) => server.favorite)
+                    : <Server>[]) {
+              server.description = Server.random(0).description;
+            }
+            setState(() {});
+          }
+        }),
+        child: [
+          ListView.builder(
+            key: const PageStorageKey("MainPageScroll>All"),
+            controller: scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            prototypeItem: ServerListItem(0, Server.dummy(), showBottomSheet),
+            itemCount: ServerManager().list.length,
+            itemBuilder: (context, i) =>
+                ServerListItem(i, ServerManager().list[i], showBottomSheet),
+          ),
+          sectionFavorites(),
+          const CenteredIconMessage(
+            Icons.precision_manufacturing_outlined,
+            "This section will implemented in future updates",
+          ),
+        ][section],
+      ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () => addServer(),
       ),
       bottomNavigationBar: BottomNavigationBar(
-          currentIndex: selectedTab,
+          currentIndex: section,
           enableFeedback: true,
           showUnselectedLabels: false,
           onTap: (index) => changeSection(index),
