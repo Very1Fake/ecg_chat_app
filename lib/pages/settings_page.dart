@@ -2,6 +2,8 @@ import 'package:ecg_chat_app/models/account.dart';
 import 'package:ecg_chat_app/utils/consts.dart';
 import 'package:ecg_chat_app/utils/settings.dart';
 import 'package:ecg_chat_app/utils/theme.dart';
+import 'package:ecg_chat_app/widgets/simple_dialog_tile.dart';
+import 'package:ecg_chat_app/widgets/tile_avatar.dart';
 import 'package:flutter/material.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -39,13 +41,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget themeColorIcon(ThemeColor color, [double radius = 18.0]) {
-    return CircleAvatar(
-      backgroundColor: color.toColor(),
+    return TileAvatarColor(
+      color.toColor(),
+      char: color == ThemeColor.system ? "A" : null,
       radius: radius,
-      child: color == ThemeColor.system
-          ? Text("A",
-              style: TextStyle(color: Colors.white, fontSize: radius * 1.25))
-          : null,
     );
   }
 
@@ -64,15 +63,7 @@ class _SettingsPageState extends State<SettingsPage> {
         break;
     }
 
-    return CircleAvatar(
-      backgroundColor: Colors.transparent,
-      radius: radius,
-      child: Icon(
-        icon,
-        color: Theme.of(context).colorScheme.onBackground,
-        size: radius * 1.5,
-      ),
-    );
+    return TileAvatarIcon(icon, radius: radius);
   }
 
   Future<ThemeColor?> showColorChooser() {
@@ -81,13 +72,10 @@ class _SettingsPageState extends State<SettingsPage> {
         builder: (context) => SimpleDialog(
             title: const Text("Choose theme color"),
             children: ThemeColor.values
-                .map((color) => SimpleDialogOption(
+                .map((color) => SimpleDialogTile(
+                      title: Text(color.asString()),
+                      trailing: themeColorIcon(color, 14.0),
                       onPressed: () => Navigator.of(context).pop(color),
-                      child: Row(children: [
-                        Text(color.asString()),
-                        const Spacer(),
-                        themeColorIcon(color, 14.0),
-                      ]),
                     ))
                 .toList()));
   }
@@ -98,13 +86,10 @@ class _SettingsPageState extends State<SettingsPage> {
       builder: (context) => SimpleDialog(
         title: const Text("Choose theme mode"),
         children: ThemeBrightness.values
-            .map((mode) => SimpleDialogOption(
+            .map((mode) => SimpleDialogTile(
+                  title: Text(mode.asString()),
+                  trailing: themeBrightnessIcon(mode, 14.0),
                   onPressed: () => Navigator.of(context).pop(mode),
-                  child: Row(children: [
-                    Text(mode.asString()),
-                    const Spacer(),
-                    themeBrightnessIcon(mode, 14.0),
-                  ]),
                 ))
             .toList(),
       ),

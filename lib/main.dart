@@ -9,8 +9,6 @@ import 'package:ecg_chat_app/pages/settings_page.dart';
 import 'package:ecg_chat_app/utils/theme.dart';
 import 'package:flutter/material.dart';
 
-// TODO: Add autofill service
-
 void main() {
   AppTheme.init();
   AccountManager.init();

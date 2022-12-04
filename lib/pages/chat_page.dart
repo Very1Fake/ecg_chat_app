@@ -4,6 +4,8 @@ import 'package:ecg_chat_app/utils/theme.dart';
 import 'package:ecg_chat_app/widgets/message_bubble.dart';
 import 'package:ecg_chat_app/widgets/avatar.dart';
 import 'package:ecg_chat_app/widgets/player_list_item.dart';
+import 'package:ecg_chat_app/widgets/simple_dialog_tile.dart';
+import 'package:ecg_chat_app/widgets/tile_avatar.dart';
 import 'package:flutter/material.dart';
 
 import 'package:ecg_chat_app/models/server.dart';
@@ -173,31 +175,8 @@ class _ChatPageState extends State<ChatPage> {
                       Message message = messages[index];
 
                       return GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: () => showDialog(
-                          context: context,
-                          builder: (context) => SimpleDialog(
-                            children: [
-                              SimpleDialogOption(
-                                child: const Text('Copy'),
-                                onPressed: () async {
-                                  Clipboard.setData(
-                                    ClipboardData(text: message.text),
-                                  );
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                              SimpleDialogOption(
-                                child: const Text('Delete'),
-                                onPressed: () {
-                                  showBannerMessage(
-                                      'Delete message feature will added soon...');
-                                  Navigator.of(context).pop();
-                                },
-                              )
-                            ],
-                          ),
-                        ),
+                        behavior: HitTestBehavior.deferToChild,
+                        onTap: () => showMessageOptions(message),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
                           child: Row(
@@ -207,11 +186,22 @@ class _ChatPageState extends State<ChatPage> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               if (!message.isMine)
-                                const Avatar()
+                                GestureDetector(
+                                    behavior: HitTestBehavior.translucent,
+                                    onTap: () {
+                                      var player = message.sender;
+                                      if (player != null) {
+                                        showBottomSheet(player);
+                                      }
+                                    },
+                                    child: const Avatar())
                               else
                                 const Flexible(flex: 1, child: SizedBox()),
                               if (!message.isMine) const SizedBox(width: 8.0),
-                              Flexible(flex: 3, child: MessageBubble(message)),
+                              Flexible(
+                                flex: 3,
+                                child: MessageBubble(message),
+                              ),
                               if (!message.isMine)
                                 const Flexible(flex: 1, child: SizedBox()),
                             ],
@@ -288,6 +278,44 @@ class _ChatPageState extends State<ChatPage> {
                     ))
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> showMessageOptions(Message message) {
+    return showDialog(
+      context: context,
+      builder: (context) => SimpleDialog(
+        contentPadding: const EdgeInsets.symmetric(vertical: 20),
+        children: [
+          SimpleDialogTile(
+            leading: const TileAvatarIcon(Icons.reply, radius: 16),
+            title: const Text('Reply'),
+            onPressed: () {
+              showBannerMessage(
+                  'Reply to messages features will added soon...');
+              Navigator.of(context).pop();
+            },
+          ),
+          SimpleDialogTile(
+            leading: const TileAvatarIcon(Icons.copy, radius: 16),
+            title: const Text('Copy'),
+            onPressed: () async {
+              Clipboard.setData(
+                ClipboardData(text: message.text),
+              );
+              Navigator.of(context).pop();
+            },
+          ),
+          SimpleDialogTile(
+            leading: const TileAvatarIcon(Icons.delete, radius: 16),
+            title: const Text('Delete'),
+            onPressed: () {
+              showBannerMessage('Delete message feature will added soon...');
+              Navigator.of(context).pop();
+            },
+          )
+        ],
       ),
     );
   }
