@@ -1,10 +1,12 @@
 import 'package:ecg_chat_app/models/account.dart';
+import 'package:ecg_chat_app/models/isar_service.dart';
 import 'package:ecg_chat_app/utils/consts.dart';
-import 'package:ecg_chat_app/utils/settings.dart';
+import 'package:ecg_chat_app/models/settings.dart';
 import 'package:ecg_chat_app/utils/theme.dart';
 import 'package:ecg_chat_app/widgets/simple_dialog_tile.dart';
 import 'package:ecg_chat_app/widgets/tile_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -58,9 +60,8 @@ class _SettingsPageState extends State<SettingsPage> {
       case ThemeBrightness.dark:
         icon = Icons.dark_mode_outlined;
         break;
-      case ThemeBrightness.system:
+      default:
         icon = Icons.settings_suggest;
-        break;
     }
 
     return TileAvatarIcon(icon, radius: radius);
@@ -141,33 +142,24 @@ class _SettingsPageState extends State<SettingsPage> {
           buildSection("Interface", [
             SwitchListTile(
                 title: const Text("Material You Theme"),
-                value: AppTheme.useMaterial3,
-                onChanged: (value) => setState(() {
-                      AppTheme.useMaterial3 = !AppTheme.useMaterial3;
-                      ThemeSwitcher.of(context).updateTheme();
-                    })),
+                value: AppTheme.materialYou,
+                onChanged: (value) =>
+                    IsarService.updateAppThemeSync(materialYou: value)
+                        .then((_) => setState(() {}))),
             ListTile(
-              title: const Text("Theme Color"),
-              subtitle: Text(AppTheme.color.asString()),
-              trailing: themeColorIcon(AppTheme.color),
-              onTap: () => showColorChooser().then((color) {
-                setState(() {
-                  if (color != null) AppTheme.color = color;
-                  ThemeSwitcher.of(context).updateTheme();
-                });
-              }),
-            ),
+                title: const Text("Theme Color"),
+                subtitle: Text(AppTheme.color.asString()),
+                trailing: themeColorIcon(AppTheme.color),
+                onTap: () => showColorChooser().then((color) =>
+                    IsarService.updateAppThemeSync(color: color)
+                        .then((_) => setState(() {})))),
             ListTile(
-              title: const Text("Theme Mode"),
-              subtitle: Text(AppTheme.brightness.asString()),
-              trailing: themeBrightnessIcon(AppTheme.brightness),
-              onTap: () => showThemeModeChooser().then((mode) {
-                setState(() {
-                  if (mode != null) AppTheme.brightness = mode;
-                  ThemeSwitcher.of(context).updateTheme();
-                });
-              }),
-            )
+                title: const Text("Theme Mode"),
+                subtitle: Text(AppTheme.brightness.asString()),
+                trailing: themeBrightnessIcon(AppTheme.brightness),
+                onTap: () => showThemeModeChooser().then((mode) =>
+                    IsarService.updateAppThemeSync(brightness: mode)
+                        .then((_) => setState(() {}))))
           ]),
           buildSection("Data", [
             Container(

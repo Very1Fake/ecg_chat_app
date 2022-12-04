@@ -1,3 +1,4 @@
+import 'package:ecg_chat_app/models/settings.dart';
 import 'package:flutter/material.dart';
 
 enum ThemeColor {
@@ -77,37 +78,19 @@ enum ThemeBrightness {
 }
 
 class AppTheme {
-  bool _useMaterial3;
+  bool _materialYou;
   ThemeColor _color;
-  ThemeBrightness _themeBrightness;
+  ThemeBrightness _brightness;
 
-  AppTheme(
-      [this._useMaterial3 = true,
-      this._color = ThemeColor.caramel,
-      this._themeBrightness = ThemeBrightness.system]);
+  AppTheme._()
+      : _materialYou = true,
+        _color = ThemeColor.caramel,
+        _brightness = ThemeBrightness.system;
 
   static late AppTheme _instance;
 
   static init() {
-    _instance = AppTheme();
-  }
-
-  static bool get useMaterial3 => _instance._useMaterial3;
-
-  static set useMaterial3(bool use) {
-    _instance._useMaterial3 = use;
-  }
-
-  static ThemeColor get color => _instance._color;
-
-  static set color(ThemeColor color) {
-    _instance._color = color;
-  }
-
-  static ThemeBrightness get brightness => _instance._themeBrightness;
-
-  static set brightness(ThemeBrightness mode) {
-    _instance._themeBrightness = mode;
+    _instance = AppTheme._();
   }
 
   static ThemeData themeData(Brightness brightness) => ThemeData(
@@ -116,53 +99,20 @@ class AppTheme {
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           landscapeLayout: BottomNavigationBarLandscapeLayout.centered,
         ),
-        useMaterial3: AppTheme.useMaterial3,
+        useMaterial3: AppTheme.materialYou,
       );
-}
 
-class ThemeSwitcher extends InheritedWidget {
-  // ignore: library_private_types_in_public_api
-  final _ThemeSwitcherWidgetState data;
-
-  const ThemeSwitcher(this.data, child, {super.key}) : super(child: child);
-
-  // ignore: library_private_types_in_public_api
-  static _ThemeSwitcherWidgetState of(BuildContext context) {
-    return (context.dependOnInheritedWidgetOfExactType<ThemeSwitcher>()
-            as ThemeSwitcher)
-        .data;
+  static fromSettings(Settings settings) {
+    _instance._materialYou = settings.materialYou;
+    _instance._color = settings.themeColor;
+    _instance._brightness = settings.themeBrightness;
   }
 
-  @override
-  bool updateShouldNotify(ThemeSwitcher oldWidget) {
-    return this != oldWidget;
-  }
-}
+  static ThemeData get themeLight => themeData(Brightness.light);
+  static ThemeData get themeDark => themeData(Brightness.dark);
+  static ThemeMode get themeMode => brightness.toThemeMode();
 
-class ThemeSwitcherWidget extends StatefulWidget {
-  final ThemeData initialTheme;
-  final Widget child;
-
-  const ThemeSwitcherWidget(this.initialTheme, this.child, {super.key});
-
-  @override
-  State<ThemeSwitcherWidget> createState() => _ThemeSwitcherWidgetState();
-}
-
-class _ThemeSwitcherWidgetState extends State<ThemeSwitcherWidget> {
-  ThemeData get themeLight => AppTheme.themeData(Brightness.light);
-  ThemeData get themeDark => AppTheme.themeData(Brightness.dark);
-  ThemeMode get themeMode => AppTheme.brightness.toThemeMode();
-
-  void updateTheme() {
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ThemeSwitcher(
-      this,
-      widget.child,
-    );
-  }
+  static bool get materialYou => _instance._materialYou;
+  static ThemeColor get color => _instance._color;
+  static ThemeBrightness get brightness => _instance._brightness;
 }

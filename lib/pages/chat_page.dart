@@ -108,7 +108,7 @@ class _ChatPageState extends State<ChatPage> {
     server =
         (ModalRoute.of(context)!.settings.arguments as ChatPageArgs).server;
 
-    Color textColor = AppTheme.useMaterial3
+    Color textColor = AppTheme.materialYou
         ? Theme.of(context).colorScheme.onPrimaryContainer
         : Colors.white;
 
@@ -145,8 +145,8 @@ class _ChatPageState extends State<ChatPage> {
               indicatorColor: textColor,
               indicatorPadding: const EdgeInsets.symmetric(horizontal: 2.5),
               indicatorSize:
-                  AppTheme.useMaterial3 ? TabBarIndicatorSize.label : null,
-              indicatorWeight: AppTheme.useMaterial3 ? 3.0 : 2.0,
+                  AppTheme.materialYou ? TabBarIndicatorSize.label : null,
+              indicatorWeight: AppTheme.materialYou ? 3.0 : 2.0,
               labelColor: textColor,
               tabs: [
                 Tab(

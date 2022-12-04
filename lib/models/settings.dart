@@ -1,4 +1,9 @@
 // TODO: Proper use at `Settings`
+import 'package:ecg_chat_app/utils/theme.dart';
+import 'package:isar/isar.dart';
+
+part 'settings.g.dart';
+
 enum DiskRetention {
   oneDay,
   threeDays,
@@ -22,13 +27,22 @@ enum DiskRetention {
   }
 }
 
+@collection
 class Settings {
-  static bool _initialized = false;
+  Id id = 0;
 
-  static late Settings singleton;
+  // Theme related
 
-  static Future<void> init() async {
-    if (_initialized) return;
-    _initialized = true;
-  }
+  bool materialYou = true;
+
+  @enumerated
+  ThemeColor themeColor = ThemeColor.caramel;
+
+  @enumerated
+  ThemeBrightness themeBrightness = ThemeBrightness.system;
+
+  // Data related
+
+  @enumerated
+  DiskRetention diskRetention = DiskRetention.week;
 }
