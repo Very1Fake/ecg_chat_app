@@ -8,10 +8,12 @@ import 'package:ecg_chat_app/pages/chat_page.dart';
 import 'package:ecg_chat_app/pages/entry_page.dart';
 import 'package:ecg_chat_app/pages/main_page.dart';
 import 'package:ecg_chat_app/pages/settings_page.dart';
+import 'package:ecg_chat_app/utils/api.dart';
 import 'package:flutter/material.dart';
 
 Future<void> main() async {
   await IsarService.init();
+  await API.init();
 
   ServerManager.init();
 

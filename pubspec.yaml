@@ -4,7 +4,7 @@ repository: https://github.com/Very1Fake/ecg_chat_app
 
 publish_to: 'none'
 
-version: 0.1.1+1
+version: 0.1.2+1
 
 platforms:
   android:
@@ -30,9 +30,6 @@ dependencies:
   # Formatting
   intl: ^0.18.0
 
-  # Security
-  uuid: ^3.0.7
-
   # Temporary dependencies for prototype
   faker: ^2.1.0
   english_words: ^4.0.0
@@ -40,6 +37,11 @@ dependencies:
   # Database
   isar: ^3.0.5
   isar_flutter_libs: ^3.0.5
+
+  # API
+  dio: ^4.0.6
+  dio_cookie_manager: ^2.0.0
+  cookie_jar: ^3.0.1
 
 dev_dependencies:
   flutter_test:

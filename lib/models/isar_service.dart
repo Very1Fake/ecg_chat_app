@@ -2,7 +2,6 @@ import 'package:ecg_chat_app/models/account.dart';
 import 'package:ecg_chat_app/models/settings.dart';
 import 'package:faker/faker.dart';
 import 'package:isar/isar.dart';
-import 'package:uuid/uuid.dart';
 
 class IsarService {
   late Isar _db;
@@ -66,14 +65,7 @@ class IsarService {
     });
   }
 
-  static login(String username, String _) async {
-    var account = Account()
-      ..uuid = const Uuid().v4()
-      ..username = username
-      ..email = [username, faker.internet.domainName()].join('@')
-      ..token = "<some-refresh-token>"
-      ..expiresAt = DateTime.now().add(const Duration(days: 30))
-      ..createdAt = DateTime.now();
+  static addAccount(Account account) async {
     Settings().account.value = account;
 
     await db.writeTxn(() async {
@@ -86,12 +78,10 @@ class IsarService {
 
   static register(String username, String email, String password) async {
     var account = Account()
-      ..uuid = const Uuid().v4()
+      ..uuid = ''
       ..username = username
       ..email = email
-      ..token = "<some-refresh-token>"
-      ..expiresAt = DateTime.now().add(const Duration(days: 30))
-      ..createdAt = DateTime.now();
+      ..token = "<some-refresh-token>";
     Settings().account.value = account;
 
     await db.writeTxn(() async {

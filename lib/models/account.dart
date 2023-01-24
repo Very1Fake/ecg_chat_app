@@ -15,8 +15,8 @@ class Account {
   @Index(unique: true)
   late String email;
   late String token;
-  late DateTime expiresAt;
-  late DateTime createdAt;
+  DateTime expiresAt = DateTime.now()..add(const Duration(days: 30));
+  DateTime createdAt = DateTime.now();
 
   Player toPlayer() {
     return Player(username);

@@ -9,6 +9,8 @@ import 'package:faker/faker.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 
+import '../utils/api.dart';
+
 class NewAccountPage extends StatefulWidget {
   const NewAccountPage({super.key});
 
@@ -29,36 +31,39 @@ enum Stage {
   confirm,
 }
 
-enum InvalidUsername {
+enum InputError {
   none,
-  format,
-  taken;
+  usernameFormat,
+  usernameTaken,
+  emailFormat,
+  emailTaken;
 
   String? get string {
     switch (this) {
-      case InvalidUsername.none:
+      case InputError.none:
         return null;
-      case InvalidUsername.format:
+      case InputError.usernameFormat:
         return 'Minimum username length is 3';
-      case InvalidUsername.taken:
+      case InputError.usernameTaken:
         return 'Account with this username is already taken';
+      case InputError.emailFormat:
+        return 'Make sure you entered valid email';
+      case InputError.emailTaken:
+        return 'Account for this email already exists';
     }
   }
 }
 
-enum InvalidEmail {
-  none,
-  format,
-  taken;
+enum FinishError {
+  wrongPassword,
+  emailTaken;
 
-  String? get string {
+  String get string {
     switch (this) {
-      case InvalidEmail.none:
-        return null;
-      case InvalidEmail.format:
-        return 'Make sure you entered valid email';
-      case InvalidEmail.taken:
-        return 'Account for this email already exists';
+      case FinishError.wrongPassword:
+        return 'Wrong password. Try again.';
+      case FinishError.emailTaken:
+        return 'Email has been taken. Use another one.';
     }
   }
 }
@@ -72,8 +77,8 @@ class _NewAccountPageState extends State<NewAccountPage> {
   Action action = Action.toDecide;
   Stage stage = Stage.askUsername;
 
-  InvalidUsername invalidUsername = InvalidUsername.none;
-  InvalidEmail invalidEmail = InvalidEmail.none;
+  InputError inputError = InputError.none;
+  FinishError? finishError;
   bool invalidPassword = false;
   bool invalidPasswordRepeat = false;
   bool loading = false;
@@ -98,7 +103,10 @@ class _NewAccountPageState extends State<NewAccountPage> {
   }
 
   back() {
-    if (stage.index != 0) stage = Stage.values[stage.index - 1];
+    if (stage.index != 0) {
+      stage = Stage.values[stage.index - 1];
+      inputError = InputError.none;
+    }
 
     // Skip email stage if signing in
     if (action == Action.signIn && stage == Stage.askEmail) {
@@ -116,6 +124,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
       }
     } else {
       loading = true;
+      finishError = null;
       finish();
     }
   }
@@ -124,18 +133,45 @@ class _NewAccountPageState extends State<NewAccountPage> {
     final username = inputUsername.text.trim();
     final password = inputPassword.text.trim();
 
-    // TODO: Make GET /auth/login request
-    // TODO: Make POST /user request if signing up
     Future.delayed(Duration(milliseconds: Random().nextInt(1000) + 500))
-        .then((_) async => (action == Action.signIn)
-            ? await IsarService.login(username, password)
-            : await IsarService.register(
-                username, inputEmail.text.trim(), password))
-        .then((_) {
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+        .then((_) async {
+      if (action == Action.signIn) {
+        final login = await API.userLogin(username, password);
+
+        if (login != null) {
+          final userData = (await API.userData(login.access))!;
+          await IsarService.addAccount(Account()
+            ..uuid = userData.uuid
+            ..username = userData.username
+            ..email = userData.email
+            ..token = login.refresh);
+          return true;
+        } else {
+          return false;
+        }
       } else {
-        Navigator.of(context).popAndPushNamed('/');
+        // TODO: Add registration
+        await IsarService.register(username, inputEmail.text.trim(), password);
+        return true;
+      }
+    }).then((success) {
+      if (success) {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        } else {
+          Navigator.of(context).popAndPushNamed('/');
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            if (action == Action.signIn) {
+              finishError = FinishError.wrongPassword;
+            } else {
+              finishError = FinishError.emailTaken;
+            }
+            loading = false;
+          });
+        }
       }
     });
   }
@@ -151,24 +187,20 @@ class _NewAccountPageState extends State<NewAccountPage> {
                   .usernameEqualTo(username)
                   .findFirstSync() !=
               null) {
-            invalidUsername = InvalidUsername.taken;
+            inputError = InputError.usernameTaken;
           } else {
-            // TODO: Make GET /user request
+            inputError = InputError.none;
             backgroundTask(
-              Future.delayed(
-                  Duration(milliseconds: Random().nextInt(1000) + 500)),
-              (_) {
-                Random().nextBool()
-                    ? action = Action.signIn
-                    : action = Action.signUp;
+              API.userInfo(username),
+              (userData) {
+                action = userData != null ? Action.signIn : Action.signUp;
 
-                invalidUsername = InvalidUsername.none;
                 next();
               },
             );
           }
         } else {
-          invalidUsername = InvalidUsername.format;
+          inputError = InputError.usernameFormat;
         }
 
         break;
@@ -180,13 +212,13 @@ class _NewAccountPageState extends State<NewAccountPage> {
                   .emailEqualTo(email)
                   .findFirstSync() !=
               null) {
-            invalidEmail = InvalidEmail.taken;
+            inputError = InputError.emailTaken;
           } else {
-            invalidEmail = InvalidEmail.none;
+            inputError = InputError.none;
             next();
           }
         } else {
-          invalidEmail = InvalidEmail.format;
+          inputError = InputError.emailFormat;
         }
 
         break;
@@ -238,14 +270,8 @@ class _NewAccountPageState extends State<NewAccountPage> {
               children: [
                 if (details.stepIndex != Stage.askUsername.index)
                   TextButton(
-                      onPressed: (details.stepIndex == Stage.confirm.index &&
-                              action == Action.signIn &&
-                              Navigator.of(context).canPop())
-                          ? () => Navigator.of(context).pop()
-                          : details.onStepCancel,
-                      child: (details.stepIndex == Stage.confirm.index)
-                          ? const Text('Back')
-                          : const Text('Cancel')),
+                      onPressed: details.onStepCancel,
+                      child: const Text('Back')),
                 const SizedBox(width: 8.0),
                 TextButton(
                   onPressed: details.onStepContinue,
@@ -283,7 +309,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
                 hintMaxLines: 1,
                 hintText: faker.internet.userName(),
                 errorMaxLines: 3,
-                errorText: invalidUsername.string,
+                errorText: inputError.string,
               ),
               keyboardType: TextInputType.text,
               maxLength: 24,
@@ -309,7 +335,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
                     hintMaxLines: 1,
                     hintText: 'mail@example.com',
                     errorMaxLines: 2,
-                    errorText: invalidEmail.string,
+                    errorText: inputError.string,
                   ),
                   keyboardType: TextInputType.emailAddress,
                   controller: inputEmail,
@@ -365,12 +391,21 @@ class _NewAccountPageState extends State<NewAccountPage> {
           Step(
             isActive: stage == Stage.confirm,
             title: const Text('Confirmation'),
-            content: Align(
-                alignment: Alignment.centerLeft,
-                child: (action == Action.signIn)
+            content: Column(
+              children: [
+                (action == Action.signIn)
                     ? Text("Add @${inputUsername.text} account to this app?")
                     : Text(
-                        "Are you sure you want to create new account @${inputUsername.text} for ${inputEmail.text} email?")),
+                        "Are you sure you want to create new account @${inputUsername.text} for ${inputEmail.text} email?"),
+                if (finishError != null) const SizedBox(height: 8.0),
+                if (finishError != null)
+                  Text(
+                    finishError!.string,
+                    style: TextStyle(color: Theme.of(context).errorColor),
+                  ),
+                const SizedBox(height: 8.0),
+              ],
+            ),
           ),
         ],
       ),
