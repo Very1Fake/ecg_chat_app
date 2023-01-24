@@ -2,11 +2,9 @@ import 'package:ecg_chat_app/models/account.dart';
 import 'package:ecg_chat_app/models/isar_service.dart';
 import 'package:ecg_chat_app/utils/consts.dart';
 import 'package:ecg_chat_app/models/settings.dart';
-import 'package:ecg_chat_app/utils/theme.dart';
 import 'package:ecg_chat_app/widgets/simple_dialog_tile.dart';
 import 'package:ecg_chat_app/widgets/tile_avatar.dart';
 import 'package:flutter/material.dart';
-import 'package:isar/isar.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -142,24 +140,21 @@ class _SettingsPageState extends State<SettingsPage> {
           buildSection("Interface", [
             SwitchListTile(
                 title: const Text("Material You Theme"),
-                value: AppTheme.materialYou,
+                value: Settings().materialYou,
                 onChanged: (value) =>
-                    IsarService.updateAppThemeSync(materialYou: value)
-                        .then((_) => setState(() {}))),
+                    IsarService.updateAppThemeSync(materialYou: value)),
             ListTile(
                 title: const Text("Theme Color"),
-                subtitle: Text(AppTheme.color.asString()),
-                trailing: themeColorIcon(AppTheme.color),
-                onTap: () => showColorChooser().then((color) =>
-                    IsarService.updateAppThemeSync(color: color)
-                        .then((_) => setState(() {})))),
+                subtitle: Text(Settings().themeColor.asString()),
+                trailing: themeColorIcon(Settings().themeColor),
+                onTap: () => showColorChooser().then(
+                    (color) => IsarService.updateAppThemeSync(color: color))),
             ListTile(
                 title: const Text("Theme Mode"),
-                subtitle: Text(AppTheme.brightness.asString()),
-                trailing: themeBrightnessIcon(AppTheme.brightness),
-                onTap: () => showThemeModeChooser().then((mode) =>
-                    IsarService.updateAppThemeSync(brightness: mode)
-                        .then((_) => setState(() {}))))
+                subtitle: Text(Settings().themeBrightness.asString()),
+                trailing: themeBrightnessIcon(Settings().themeBrightness),
+                onTap: () => showThemeModeChooser().then(
+                    (mode) => IsarService.updateAppThemeSync(brightness: mode)))
           ]),
           buildSection("Data", [
             Container(

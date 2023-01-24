@@ -1,6 +1,6 @@
 import 'package:ecg_chat_app/models/message.dart';
 import 'package:ecg_chat_app/models/player.dart';
-import 'package:ecg_chat_app/utils/theme.dart';
+import 'package:ecg_chat_app/models/settings.dart';
 import 'package:ecg_chat_app/widgets/message_bubble.dart';
 import 'package:ecg_chat_app/widgets/avatar.dart';
 import 'package:ecg_chat_app/widgets/player_list_item.dart';
@@ -108,7 +108,7 @@ class _ChatPageState extends State<ChatPage> {
     server =
         (ModalRoute.of(context)!.settings.arguments as ChatPageArgs).server;
 
-    Color textColor = AppTheme.materialYou
+    Color textColor = Settings().materialYou
         ? Theme.of(context).colorScheme.onPrimaryContainer
         : Colors.white;
 
@@ -145,8 +145,8 @@ class _ChatPageState extends State<ChatPage> {
               indicatorColor: textColor,
               indicatorPadding: const EdgeInsets.symmetric(horizontal: 2.5),
               indicatorSize:
-                  AppTheme.materialYou ? TabBarIndicatorSize.label : null,
-              indicatorWeight: AppTheme.materialYou ? 3.0 : 2.0,
+                  Settings().materialYou ? TabBarIndicatorSize.label : null,
+              indicatorWeight: Settings().materialYou ? 3.0 : 2.0,
               labelColor: textColor,
               tabs: [
                 Tab(

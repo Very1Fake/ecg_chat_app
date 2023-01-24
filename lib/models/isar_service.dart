@@ -1,7 +1,6 @@
 import 'package:ecg_chat_app/models/settings.dart';
 import 'package:isar/isar.dart';
 
-import '../utils/theme.dart';
 
 class IsarService {
   late Isar _db;
@@ -21,29 +20,36 @@ class IsarService {
     await db.writeTxn(
       () async {
         Settings? settings = await db.settings.get(0);
-        if (settings != null) {
-          AppTheme.fromSettings(settings);
-        } else {
+        if (settings == null) {
           db.settings.put(Settings());
         }
       },
     );
   }
 
-  static Stream<Settings?> settingsWatcher() {
-    return db.settings.watchObject(0, fireImmediately: true);
-  }
+  // Settings related
 
   static updateAppThemeSync({
     bool? materialYou,
     ThemeColor? color,
     ThemeBrightness? brightness,
-  }) async {
+  }) {
+    if (materialYou != null) {
+      Settings().materialYou = materialYou;
+    }
+
+    if (color != null) {
+      Settings().themeColor = color;
+    }
+
+    if (brightness != null) {
+      Settings().themeBrightness = brightness;
+    }
+
     db.writeTxnSync(() {
-      db.settings.putSync((db.settings.getSync(0))!
-        ..materialYou = materialYou ?? AppTheme.materialYou
-        ..themeColor = color ?? AppTheme.color
-        ..themeBrightness = brightness ?? AppTheme.brightness);
+      db.settings.putSync(Settings());
     });
+
+    Settings().notify();
   }
 }
