@@ -23,19 +23,24 @@ const SettingsSchema = CollectionSchema(
       type: IsarType.byte,
       enumMap: _SettingsdiskRetentionEnumValueMap,
     ),
-    r'materialYou': PropertySchema(
+    r'hasListeners': PropertySchema(
       id: 1,
+      name: r'hasListeners',
+      type: IsarType.bool,
+    ),
+    r'materialYou': PropertySchema(
+      id: 2,
       name: r'materialYou',
       type: IsarType.bool,
     ),
     r'themeBrightness': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'themeBrightness',
       type: IsarType.byte,
       enumMap: _SettingsthemeBrightnessEnumValueMap,
     ),
     r'themeColor': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'themeColor',
       type: IsarType.byte,
       enumMap: _SettingsthemeColorEnumValueMap,
@@ -47,7 +52,14 @@ const SettingsSchema = CollectionSchema(
   deserializeProp: _settingsDeserializeProp,
   idName: r'id',
   indexes: {},
-  links: {},
+  links: {
+    r'account': LinkSchema(
+      id: -1866855146403922463,
+      name: r'account',
+      target: r'Account',
+      single: true,
+    )
+  },
   embeddedSchemas: {},
   getId: _settingsGetId,
   getLinks: _settingsGetLinks,
@@ -71,9 +83,10 @@ void _settingsSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeByte(offsets[0], object.diskRetention.index);
-  writer.writeBool(offsets[1], object.materialYou);
-  writer.writeByte(offsets[2], object.themeBrightness.index);
-  writer.writeByte(offsets[3], object.themeColor.index);
+  writer.writeBool(offsets[1], object.hasListeners);
+  writer.writeBool(offsets[2], object.materialYou);
+  writer.writeByte(offsets[3], object.themeBrightness.index);
+  writer.writeByte(offsets[4], object.themeColor.index);
 }
 
 Settings _settingsDeserialize(
@@ -87,12 +100,12 @@ Settings _settingsDeserialize(
       _SettingsdiskRetentionValueEnumMap[reader.readByteOrNull(offsets[0])] ??
           DiskRetention.oneDay;
   object.id = id;
-  object.materialYou = reader.readBool(offsets[1]);
+  object.materialYou = reader.readBool(offsets[2]);
   object.themeBrightness =
-      _SettingsthemeBrightnessValueEnumMap[reader.readByteOrNull(offsets[2])] ??
+      _SettingsthemeBrightnessValueEnumMap[reader.readByteOrNull(offsets[3])] ??
           ThemeBrightness.light;
   object.themeColor =
-      _SettingsthemeColorValueEnumMap[reader.readByteOrNull(offsets[3])] ??
+      _SettingsthemeColorValueEnumMap[reader.readByteOrNull(offsets[4])] ??
           ThemeColor.navy;
   return object;
 }
@@ -111,10 +124,12 @@ P _settingsDeserializeProp<P>(
     case 1:
       return (reader.readBool(offset)) as P;
     case 2:
+      return (reader.readBool(offset)) as P;
+    case 3:
       return (_SettingsthemeBrightnessValueEnumMap[
               reader.readByteOrNull(offset)] ??
           ThemeBrightness.light) as P;
-    case 3:
+    case 4:
       return (_SettingsthemeColorValueEnumMap[reader.readByteOrNull(offset)] ??
           ThemeColor.navy) as P;
     default:
@@ -170,11 +185,12 @@ Id _settingsGetId(Settings object) {
 }
 
 List<IsarLinkBase<dynamic>> _settingsGetLinks(Settings object) {
-  return [];
+  return [object.account];
 }
 
 void _settingsAttach(IsarCollection<dynamic> col, Id id, Settings object) {
   object.id = id;
+  object.account.attach(col, col.isar.collection<Account>(), r'account', id);
 }
 
 extension SettingsQueryWhereSort on QueryBuilder<Settings, Settings, QWhere> {
@@ -304,6 +320,16 @@ extension SettingsQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> hasListenersEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'hasListeners',
+        value: value,
       ));
     });
   }
@@ -484,7 +510,20 @@ extension SettingsQueryObject
     on QueryBuilder<Settings, Settings, QFilterCondition> {}
 
 extension SettingsQueryLinks
-    on QueryBuilder<Settings, Settings, QFilterCondition> {}
+    on QueryBuilder<Settings, Settings, QFilterCondition> {
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> account(
+      FilterQuery<Account> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.link(q, r'account');
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> accountIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.linkLength(r'account', 0, true, 0, true);
+    });
+  }
+}
 
 extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
   QueryBuilder<Settings, Settings, QAfterSortBy> sortByDiskRetention() {
@@ -496,6 +535,18 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
   QueryBuilder<Settings, Settings, QAfterSortBy> sortByDiskRetentionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'diskRetention', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByHasListeners() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasListeners', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByHasListenersDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasListeners', Sort.desc);
     });
   }
 
@@ -547,6 +598,18 @@ extension SettingsQuerySortThenBy
   QueryBuilder<Settings, Settings, QAfterSortBy> thenByDiskRetentionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'diskRetention', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByHasListeners() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasListeners', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByHasListenersDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasListeners', Sort.desc);
     });
   }
 
@@ -607,6 +670,12 @@ extension SettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Settings, Settings, QDistinct> distinctByHasListeners() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'hasListeners');
+    });
+  }
+
   QueryBuilder<Settings, Settings, QDistinct> distinctByMaterialYou() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'materialYou');
@@ -638,6 +707,12 @@ extension SettingsQueryProperty
       diskRetentionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'diskRetention');
+    });
+  }
+
+  QueryBuilder<Settings, bool, QQueryOperations> hasListenersProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'hasListeners');
     });
   }
 

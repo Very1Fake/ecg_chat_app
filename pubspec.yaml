@@ -28,10 +28,13 @@ dependencies:
   cupertino_icons: ^1.0.2
 
   # Formatting
-  intl: ^0.17.0
+  intl: ^0.18.0
+
+  # Security
+  uuid: ^3.0.7
 
   # Temporary dependencies for prototype
-  faker: ^2.0.0
+  faker: ^2.1.0
   english_words: ^4.0.0
 
   # Database

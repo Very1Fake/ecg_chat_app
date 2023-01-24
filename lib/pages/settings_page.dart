@@ -1,4 +1,3 @@
-import 'package:ecg_chat_app/models/account.dart';
 import 'package:ecg_chat_app/models/isar_service.dart';
 import 'package:ecg_chat_app/utils/consts.dart';
 import 'package:ecg_chat_app/models/settings.dart';
@@ -130,10 +129,9 @@ class _SettingsPageState extends State<SettingsPage> {
             ListTile(
               title: const Text("Log Out"),
               onTap: () {
-                if (AccountManager().logOut(context)) {
-                  Navigator.of(context).pop();
-                }
-                // setState(() {});
+                IsarService.logOut();
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/', (_) => false);
               },
             ),
           ]),

@@ -114,6 +114,9 @@ class Settings extends ChangeNotifier {
 
   Id id = 0;
 
+  // Selected user account
+  final account = IsarLink<Account>();
+
   // Theme related
 
   bool materialYou = true;

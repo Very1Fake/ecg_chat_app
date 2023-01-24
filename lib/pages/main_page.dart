@@ -1,7 +1,7 @@
-import 'dart:math';
-
 import 'package:ecg_chat_app/models/account.dart';
+import 'package:ecg_chat_app/models/isar_service.dart';
 import 'package:ecg_chat_app/models/server.dart';
+import 'package:ecg_chat_app/models/settings.dart';
 import 'package:ecg_chat_app/utils/colors.dart';
 import 'package:ecg_chat_app/utils/consts.dart';
 import 'package:ecg_chat_app/widgets/avatar.dart';
@@ -18,12 +18,31 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  List<Account> accountList = [];
+
   bool accountManagerExpanded = false;
   bool needToScrollToBottom = false;
   int section = 0;
 
   final ScrollController scrollController =
       ScrollController(keepScrollOffset: true);
+
+  @override
+  void initState() {
+    super.initState();
+    Settings().addListener(onSettingsChanged);
+    onSettingsChanged();
+  }
+
+  @override
+  void dispose() {
+    Settings().removeListener(onSettingsChanged);
+    super.dispose();
+  }
+
+  onSettingsChanged() => setState(() {
+        accountList = IsarService.accountList;
+      });
 
   changeSection(int newSection) {
     // Scroll to top if current section
@@ -152,9 +171,7 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    var accountList = AccountManager().accountList;
-    var account = AccountManager().account;
-
+    var account = Settings().account.value!;
     var theme = Theme.of(context);
 
     return Scaffold(
@@ -188,48 +205,49 @@ class _MainPageState extends State<MainPage> {
                       ),
                     ),
                     ExpansionTile(
-                      title: Text(
-                        account.username,
-                        style: theme.textTheme.titleSmall,
-                      ),
-                      subtitle: Text(
-                        account.email,
-                        style:
-                            theme.textTheme.caption?.copyWith(fontSize: 12.5),
-                      ),
-                      initiallyExpanded: accountManagerExpanded,
-                      childrenPadding:
-                          const EdgeInsets.symmetric(vertical: 4.0),
-                      onExpansionChanged: (value) => setState(() =>
-                          accountManagerExpanded = !accountManagerExpanded),
-                      children: List.generate(
-                          accountList.length,
-                          (index) => PlayerListItem(
-                                accountList[index].toPlayer(),
-                                selected: index == AccountManager().selected,
-                                callback: index != AccountManager().selected
-                                    ? (_) {
-                                        setState(() =>
-                                            AccountManager().selected = index);
-                                        Navigator.of(context).pop();
-                                      }
-                                    : null,
-                                titleStyle: theme.textTheme.titleSmall,
-                              ))
-                        ..add(ListTile(
-                          leading: Container(
-                            padding: const EdgeInsets.all(4.0),
-                            child: const Avatar(
-                              icon: Icons.add,
-                              container: true,
-                              transparent: true,
+                        title: Text(
+                          account.username,
+                          style: theme.textTheme.titleSmall,
+                        ),
+                        subtitle: Text(
+                          account.email,
+                          style:
+                              theme.textTheme.caption?.copyWith(fontSize: 12.5),
+                        ),
+                        initiallyExpanded: accountManagerExpanded,
+                        childrenPadding:
+                            const EdgeInsets.symmetric(vertical: 4.0),
+                        onExpansionChanged: (value) => setState(() =>
+                            accountManagerExpanded = !accountManagerExpanded),
+                        children: [
+                          ...accountList
+                              .map((acc) => PlayerListItem(
+                                    acc.toPlayer(),
+                                    selected: acc.id == account.id,
+                                    callback: acc.id != account.id
+                                        ? (_) {
+                                            IsarService.switchAccount(acc);
+                                            setState(() {});
+                                            Navigator.of(context).pop();
+                                          }
+                                        : null,
+                                    titleStyle: theme.textTheme.titleSmall,
+                                  ))
+                              .toList(),
+                          ListTile(
+                            leading: Container(
+                              padding: const EdgeInsets.all(4.0),
+                              child: const Avatar(
+                                icon: Icons.add,
+                                container: true,
+                                transparent: true,
+                              ),
                             ),
-                          ),
-                          title: const Text("Add Account"),
-                          onTap: () =>
-                              Navigator.of(context).pushNamed('/add_account'),
-                        )),
-                    ),
+                            title: const Text("Add Account"),
+                            onTap: () =>
+                                Navigator.of(context).pushNamed('/add_account'),
+                          )
+                        ]),
                   ],
                 ),
               ),

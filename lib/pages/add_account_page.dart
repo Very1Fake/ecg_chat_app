@@ -1,9 +1,13 @@
 import 'dart:math';
 
 import 'package:ecg_chat_app/models/account.dart';
+import 'package:ecg_chat_app/models/isar_service.dart';
+import 'package:ecg_chat_app/models/settings.dart';
 import 'package:ecg_chat_app/utils/validation.dart';
+import 'package:ecg_chat_app/widgets/bottom_progress_indicator.dart';
 import 'package:faker/faker.dart';
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 
 class NewAccountPage extends StatefulWidget {
   const NewAccountPage({super.key});
@@ -72,6 +76,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
   InvalidEmail invalidEmail = InvalidEmail.none;
   bool invalidPassword = false;
   bool invalidPasswordRepeat = false;
+  bool loading = false;
 
   @override
   void dispose() {
@@ -80,6 +85,16 @@ class _NewAccountPageState extends State<NewAccountPage> {
     inputPassword.dispose();
     inputPasswordRepeat.dispose();
     super.dispose();
+  }
+
+  backgroundTask<T>(Future<T> task, Function(T) onResult) {
+    setState(() => loading = true);
+    task.then((value) {
+      if (mounted) {
+        onResult(value);
+        setState(() => loading = false);
+      }
+    });
   }
 
   back() {
@@ -100,32 +115,118 @@ class _NewAccountPageState extends State<NewAccountPage> {
         stage = Stage.askPassword;
       }
     } else {
-      Account account;
+      loading = true;
+      finish();
+    }
+  }
 
-      String username = inputUsername.text.trim();
-      String password = inputPassword.text.trim();
+  finish() async {
+    final username = inputUsername.text.trim();
+    final password = inputPassword.text.trim();
 
-      if (action == Action.signIn) {
-        account = AccountManager().add(username, password);
-      } else {
-        account =
-            AccountManager().create(username, inputEmail.text.trim(), password);
-      }
-
-      // Update parent after popping
+    // TODO: Make GET /auth/login request
+    // TODO: Make POST /user request if signing up
+    Future.delayed(Duration(milliseconds: Random().nextInt(1000) + 500))
+        .then((_) async => (action == Action.signIn)
+            ? await IsarService.login(username, password)
+            : await IsarService.register(
+                username, inputEmail.text.trim(), password))
+        .then((_) {
       if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop(account);
+        Navigator.of(context).pop();
       } else {
         Navigator.of(context).popAndPushNamed('/');
       }
+    });
+  }
+
+  onContinue() {
+    switch (stage) {
+      case Stage.askUsername:
+        final username = inputUsername.text.trim();
+
+        if (username.isValidUsername()) {
+          if (IsarService.db.accounts
+                  .where()
+                  .usernameEqualTo(username)
+                  .findFirstSync() !=
+              null) {
+            invalidUsername = InvalidUsername.taken;
+          } else {
+            // TODO: Make GET /user request
+            backgroundTask(
+              Future.delayed(
+                  Duration(milliseconds: Random().nextInt(1000) + 500)),
+              (_) {
+                Random().nextBool()
+                    ? action = Action.signIn
+                    : action = Action.signUp;
+
+                invalidUsername = InvalidUsername.none;
+                next();
+              },
+            );
+          }
+        } else {
+          invalidUsername = InvalidUsername.format;
+        }
+
+        break;
+      case Stage.askEmail:
+        final email = inputEmail.text.trim();
+        if (email.isValidEmail()) {
+          if (IsarService.db.accounts
+                  .where()
+                  .emailEqualTo(email)
+                  .findFirstSync() !=
+              null) {
+            invalidEmail = InvalidEmail.taken;
+          } else {
+            invalidEmail = InvalidEmail.none;
+            next();
+          }
+        } else {
+          invalidEmail = InvalidEmail.format;
+        }
+
+        break;
+      case Stage.askPassword:
+        final password = inputPassword.text.trim();
+
+        if (password.isValidPassword()) {
+          invalidPassword = false;
+          if (action == Action.signUp &&
+              password != inputPasswordRepeat.text.trim()) {
+            invalidPasswordRepeat = true;
+          } else {
+            invalidPasswordRepeat = false;
+            next();
+          }
+        } else {
+          invalidPassword = true;
+        }
+
+        break;
+      case Stage.confirm:
+        next();
+        break;
     }
+
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: Navigator.of(context).canPop()
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: !loading ? () => Navigator.of(context).pop() : null,
+              )
+            : null,
         title: const Text('Add Account'),
+        bottom: loading ? const BottomProgressIndicator() : null,
       ),
       body: Stepper(
         currentStep: stage.index,
@@ -162,70 +263,8 @@ class _NewAccountPageState extends State<NewAccountPage> {
           end: 24.0,
           bottom: 12.0,
         ),
-        onStepCancel: () => setState(() => back()),
-        onStepContinue: () {
-          switch (stage) {
-            case Stage.askUsername:
-              var username = inputUsername.text.trim();
-              if (username.isValidUsername()) {
-                if (AccountManager()
-                    .accountList
-                    .any((account) => account.username == username)) {
-                  invalidUsername = InvalidUsername.taken;
-                } else {
-                  if (Random().nextBool()) {
-                    action = Action.signIn;
-                  } else {
-                    action = Action.signUp;
-                  }
-
-                  invalidUsername = InvalidUsername.none;
-                  next();
-                }
-              } else {
-                invalidUsername = InvalidUsername.format;
-              }
-
-              break;
-            case Stage.askEmail:
-              var email = inputEmail.text.trim();
-              if (email.isValidEmail()) {
-                if (AccountManager()
-                    .accountList
-                    .any((account) => account.email == email)) {
-                  invalidEmail = InvalidEmail.taken;
-                } else {
-                  invalidEmail = InvalidEmail.none;
-                  next();
-                }
-              } else {
-                invalidEmail = InvalidEmail.format;
-              }
-
-              break;
-            case Stage.askPassword:
-              String password = inputPassword.text.trim();
-
-              if (password.isValidPassword()) {
-                invalidPassword = false;
-                if (action == Action.signUp &&
-                    password != inputPasswordRepeat.text.trim()) {
-                  invalidPasswordRepeat = true;
-                } else {
-                  invalidPasswordRepeat = false;
-                  next();
-                }
-              } else {
-                invalidPassword = true;
-              }
-
-              break;
-            case Stage.confirm:
-              next();
-              break;
-          }
-          setState(() {});
-        },
+        onStepCancel: !loading ? () => setState(() => back()) : null,
+        onStepContinue: !loading ? onContinue : null,
         steps: [
           Step(
             isActive: stage == Stage.askUsername,
