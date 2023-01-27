@@ -56,12 +56,15 @@ enum InputError {
 
 enum FinishError {
   wrongPassword,
+  internalServerError,
   emailTaken;
 
   String get string {
     switch (this) {
       case FinishError.wrongPassword:
         return 'Wrong password. Try again.';
+      case FinishError.internalServerError:
+        return 'Internal Server Error (500)';
       case FinishError.emailTaken:
         return 'Email has been taken. Use another one.';
     }
@@ -145,17 +148,34 @@ class _NewAccountPageState extends State<NewAccountPage> {
             ..username = userData.username
             ..email = userData.email
             ..token = login.refresh);
-          return true;
+          return null;
         } else {
-          return false;
+          return FinishError.wrongPassword;
         }
       } else {
-        // TODO: Add registration
-        await IsarService.register(username, inputEmail.text.trim(), password);
-        return true;
+        final email = inputEmail.text.trim();
+        final register = await API.userRegister(username, email, password);
+
+        if (register != null) {
+          if (register) {
+            final login = (await API.userLogin(username, password))!;
+            final userData = (await API.userData(login.access))!;
+
+            await IsarService.addAccount(Account()
+              ..uuid = userData.uuid
+              ..username = userData.username
+              ..email = userData.email
+              ..token = login.refresh);
+            return null;
+          } else {
+            return FinishError.emailTaken;
+          }
+        } else {
+          return FinishError.internalServerError;
+        }
       }
-    }).then((success) {
-      if (success) {
+    }).then((status) {
+      if (status == null) {
         if (Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
         } else {
@@ -164,11 +184,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
       } else {
         if (mounted) {
           setState(() {
-            if (action == Action.signIn) {
-              finishError = FinishError.wrongPassword;
-            } else {
-              finishError = FinishError.emailTaken;
-            }
+            finishError = status;
             loading = false;
           });
         }
@@ -194,7 +210,6 @@ class _NewAccountPageState extends State<NewAccountPage> {
               API.userInfo(username),
               (userData) {
                 action = userData != null ? Action.signIn : Action.signUp;
-
                 next();
               },
             );

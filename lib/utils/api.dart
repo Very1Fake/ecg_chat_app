@@ -52,7 +52,6 @@ class API {
     final resp = await dio.post(
       '/user/login',
       data: {'username': username, 'password': password, 'ct': 2},
-      options: Options(contentType: Headers.formUrlEncodedContentType),
     );
 
     dio.interceptors.remove(manager);
@@ -70,10 +69,21 @@ class API {
     }
   }
 
-  static userRegister(String username, String email, String password) async {
-    dio.post(
-      '/user/register',
-    );
+  static Future<bool?> userRegister(
+      String username, String email, String password) async {
+    final resp = await dio.post('/user/register', data: {
+      'username': username,
+      'email': email,
+      'password': password,
+    });
+
+    if (resp.statusCode == 201) {
+      return true;
+    } else if (resp.statusCode == 409) {
+      return false;
+    } else {
+      return null;
+    }
   }
 
   static tokenRefresh(String refreshToken) async {}
