@@ -171,7 +171,7 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    var account = Settings().account.value!;
+    var account = Settings().account.value ?? Account.sample;
     var theme = Theme.of(context);
 
     return Scaffold(

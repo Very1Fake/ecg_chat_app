@@ -6,6 +6,13 @@ part 'account.g.dart';
 // TODO: Reload account info from API at every startup
 @collection
 class Account {
+  @ignore
+  static final sample = Account()
+    ..uuid = '00000000-0000-0000-0000-000000000000'
+    ..username = 'sample'
+    ..email = 'sample@mail.com'
+    ..token = '';
+
   Id id = Isar.autoIncrement;
 
   @Index(unique: true)

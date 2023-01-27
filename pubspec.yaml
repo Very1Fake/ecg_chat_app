@@ -4,7 +4,7 @@ repository: https://github.com/Very1Fake/ecg_chat_app
 
 publish_to: 'none'
 
-version: 0.1.2+1
+version: 0.1.3+1
 
 platforms:
   android:
