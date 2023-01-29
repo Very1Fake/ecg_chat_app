@@ -54,6 +54,12 @@ class IsarService {
     Settings().notify();
   }
 
+  static updateSettings() async {
+    await db.writeTxn(() async {
+      db.settings.put(Settings());
+    }).then((_) => Settings().notify());
+  }
+
   // Accounts related
 
   static List<Account> get accountList =>

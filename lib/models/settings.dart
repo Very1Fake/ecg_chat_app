@@ -101,6 +101,21 @@ enum DiskRetention {
         return 'Forever';
     }
   }
+
+  String prettyString() {
+    switch (this) {
+      case DiskRetention.oneDay:
+        return 'for 1 day';
+      case DiskRetention.threeDays:
+        return 'for 3 days';
+      case DiskRetention.week:
+        return 'for 1 week';
+      case DiskRetention.month:
+        return 'for 1 month';
+      case DiskRetention.forever:
+        return 'forever';
+    }
+  }
 }
 
 @collection

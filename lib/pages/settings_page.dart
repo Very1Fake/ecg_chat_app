@@ -5,6 +5,8 @@ import 'package:ecg_chat_app/widgets/simple_dialog_tile.dart';
 import 'package:ecg_chat_app/widgets/tile_avatar.dart';
 import 'package:flutter/material.dart';
 
+import '../widgets/bottom_progress_indicator.dart';
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -14,6 +16,23 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   DiskRetention diskRetention = DiskRetention.oneDay;
+
+  bool loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Settings().addListener(onSettingsChanged);
+    onSettingsChanged();
+  }
+
+  @override
+  void dispose() {
+    Settings().removeListener(onSettingsChanged);
+    super.dispose();
+  }
+
+  onSettingsChanged() => setState(() {});
 
   Widget buildSection(String title, List<Widget> children) {
     return Column(children: <Widget>[
@@ -108,7 +127,7 @@ class _SettingsPageState extends State<SettingsPage> {
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               "Clear",
-              style: TextStyle(color: Theme.of(context).errorColor),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
         ],
@@ -121,6 +140,11 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Settings"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: !loading ? () => Navigator.of(context).pop() : null,
+        ),
+        bottom: loading ? const BottomProgressIndicator() : null,
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -129,9 +153,16 @@ class _SettingsPageState extends State<SettingsPage> {
             ListTile(
               title: const Text("Log Out"),
               onTap: () {
-                IsarService.logOut();
-                Navigator.of(context)
-                    .pushNamedAndRemoveUntil('/', (_) => false);
+                setState(() => loading = true);
+                Future.delayed(const Duration(seconds: 3)).then((_) {
+                  IsarService.logOut();
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/', (_) => false);
+
+                  if (mounted) {
+                    setState(() => loading = false);
+                  }
+                });
               },
             ),
           ]),
@@ -160,18 +191,20 @@ class _SettingsPageState extends State<SettingsPage> {
                 padding: const EdgeInsets.only(left: 16.0),
                 margin: const EdgeInsets.only(top: 4.0, bottom: 8.0),
                 child: Text(
-                  "Keep data for",
+                  "Keep data ${Settings().diskRetention.prettyString()}",
                   style: Theme.of(context).textTheme.titleSmall,
                 )),
             Slider(
-                // FIX: Find better design
-                value: diskRetention.index.toDouble(),
-                max: (DiskRetention.values.length - 1).toDouble(),
-                divisions: DiskRetention.values.length - 1,
-                label: diskRetention.asString(),
-                onChanged: (value) => setState(() {
-                      diskRetention = DiskRetention.values[value.toInt()];
-                    })),
+              value: Settings().diskRetention.index.toDouble(),
+              max: (DiskRetention.values.length - 1).toDouble(),
+              divisions: DiskRetention.values.length - 1,
+              label: Settings().diskRetention.asString(),
+              onChanged: (value) {
+                Settings().diskRetention = DiskRetention.values[value.toInt()];
+                IsarService.updateSettings();
+              },
+            ),
+            const SizedBox(height: 8.0),
             ListTile(
               title: const Text("Clear Image Cache"),
               subtitle:
