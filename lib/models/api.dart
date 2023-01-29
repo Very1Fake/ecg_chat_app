@@ -35,7 +35,5 @@ class TokenPair {
   final String refresh;
   final String access;
 
-  TokenPair.fromMap(Map<String, dynamic> map)
-      : refresh = map['refresh'],
-        access = map['access_token'];
+  TokenPair(this.refresh, this.access);
 }

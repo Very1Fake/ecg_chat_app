@@ -52,18 +52,19 @@ class API {
     final resp = await dio.post(
       '/user/login',
       data: {'username': username, 'password': password, 'ct': 2},
+      options: Options(responseType: ResponseType.plain),
     );
 
     dio.interceptors.remove(manager);
 
     if (resp.statusCode == 200) {
-      final data = resp.data as Map<String, dynamic>;
-      final refresh = (await jar
-              .loadForRequest(Uri.https('hub.very1faker.tk', '/user/login')))
-          .firstWhere((cookie) => cookie.name == 'hub-rt')
-          .value;
-      data['refresh'] = refresh;
-      return TokenPair.fromMap(data);
+      return TokenPair(
+        (await jar
+                .loadForRequest(Uri.https('hub.very1faker.tk', '/user/login')))
+            .firstWhere((cookie) => cookie.name == 'hub-rt')
+            .value,
+        resp.data as String,
+      );
     } else {
       return null;
     }
