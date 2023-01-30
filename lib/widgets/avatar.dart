@@ -4,12 +4,16 @@ class Avatar extends StatelessWidget {
   final IconData icon;
   final bool container;
   final bool transparent;
+  final bool tertiary;
+  final double radius;
 
   const Avatar(
       {super.key,
       this.icon = Icons.person,
       this.container = false,
-      this.transparent = false});
+      this.transparent = false,
+      this.tertiary = false,
+      this.radius = 20.0});
 
   @override
   Widget build(BuildContext context) {
@@ -19,12 +23,22 @@ class Avatar extends StatelessWidget {
       backgroundColor: transparent
           ? Colors.transparent
           : container
-              ? colorScheme.primaryContainer
-              : colorScheme.primary,
+              ? tertiary
+                  ? colorScheme.tertiaryContainer
+                  : colorScheme.primaryContainer
+              : tertiary
+                  ? colorScheme.tertiary
+                  : colorScheme.primary,
+      radius: radius,
       child: Icon(
         icon,
-        color:
-            container ? colorScheme.onPrimaryContainer : colorScheme.onPrimary,
+        color: container
+            ? tertiary
+                ? colorScheme.onTertiaryContainer
+                : colorScheme.onPrimaryContainer
+            : tertiary
+                ? colorScheme.onTertiary
+                : colorScheme.onPrimary,
       ),
     );
   }

@@ -139,128 +139,132 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Settings"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: !loading ? () => Navigator.of(context).pop() : null,
-        ),
-        bottom: loading ? const BottomProgressIndicator() : null,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 16.0),
-        children: [
-          buildSection("Account", [
-            ListTile(
-              title: const Text("Log Out"),
-              onTap: () {
-                setState(() => loading = true);
-                Future(() async {
-                  if (await API.tokenRevoke()) {
-                    StateManager.logOut();
-                    return true;
-                  }
-                  return false;
-                }).then((success) {
-                  if (mounted) {
-                    if (success) {
-                      Navigator.of(context)
-                          .pushNamedAndRemoveUntil('/', (_) => false);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Failed to logout!')));
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar.large(
+            title: const Text("Settings"),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: !loading ? () => Navigator.of(context).pop() : null,
+            ),
+            bottom: loading ? const BottomProgressIndicator() : null,
+          ),
+          SliverList(
+              delegate: SliverChildListDelegate([
+            buildSection("Account", [
+              ListTile(
+                title: const Text("Log Out"),
+                onTap: () {
+                  setState(() => loading = true);
+                  Future(() async {
+                    if (await API.tokenRevoke()) {
+                      StateManager.logOut();
+                      return true;
                     }
-                    setState(() => loading = false);
-                  }
-                });
-              },
-            ),
-          ]),
-          buildSection("Interface", [
-            SwitchListTile(
-                title: const Text("Material You Theme"),
-                value: Settings().materialYou,
-                onChanged: (value) =>
-                    StateManager.updateAppThemeSync(materialYou: value)),
-            ListTile(
-                title: const Text("Theme Color"),
-                subtitle: Text(Settings().themeColor.asString()),
-                trailing: themeColorIcon(Settings().themeColor),
-                onTap: () => showColorChooser().then(
-                    (color) => StateManager.updateAppThemeSync(color: color))),
-            ListTile(
-                title: const Text("Theme Mode"),
-                subtitle: Text(Settings().themeBrightness.asString()),
-                trailing: themeBrightnessIcon(Settings().themeBrightness),
-                onTap: () => showThemeModeChooser().then((mode) =>
-                    StateManager.updateAppThemeSync(brightness: mode)))
-          ]),
-          buildSection("Data", [
-            Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.only(left: 16.0),
-                margin: const EdgeInsets.only(top: 4.0, bottom: 8.0),
-                child: Text(
-                  "Keep data ${Settings().diskRetention.prettyString()}",
-                  style: Theme.of(context).textTheme.titleSmall,
-                )),
-            Slider(
-              value: Settings().diskRetention.index.toDouble(),
-              max: (DiskRetention.values.length - 1).toDouble(),
-              divisions: DiskRetention.values.length - 1,
-              label: Settings().diskRetention.asString(),
-              onChanged: (value) {
-                Settings().diskRetention = DiskRetention.values[value.toInt()];
-                StateManager.updateSettings();
-              },
-            ),
-            const SizedBox(height: 8.0),
-            ListTile(
-              title: const Text("Clear Image Cache"),
-              subtitle:
-                  const Text("Clearing image cache will reduce space usage."),
-              onTap: () => showConfirmationDialog("Clear image cache",
-                      "Are you sure you want to clear all cached images?")
-                  .then((approved) {
-                if (approved ?? false) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Clearing image cache!")));
-                }
-              }),
-            ),
-            ListTile(
-              title: const Text("Clear Local Database"),
-              subtitle: const Text(
-                  "Clearing local database will reduce space usage."),
-              onTap: () => showConfirmationDialog("Clear local database",
-                      "Are you sure you want to clear cached messages?")
-                  .then((approved) {
-                if (approved ?? false) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Clearing local database!")));
-                }
-              }),
-            ),
-            ListTile(
-              title: const Text("Optimize Database"),
-              subtitle: const Text(
-                  "Optimizing a database will reduce its size and slightly increase performance."),
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Optimizing local database!"))),
-            ),
-          ]),
-          buildSection("About", [
-            ListTile(
-              title: const Text("About"),
-              onTap: () => showAboutDialog(
-                context: context,
-                applicationIcon: appIcon,
-                applicationName: appName,
-                applicationVersion: appVersion,
-                applicationLegalese: applicationLegalese,
+                    return false;
+                  }).then((success) {
+                    if (mounted) {
+                      if (success) {
+                        Navigator.of(context)
+                            .pushNamedAndRemoveUntil('/', (_) => false);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Failed to logout!')));
+                      }
+                      setState(() => loading = false);
+                    }
+                  });
+                },
               ),
-            )
-          ]),
+            ]),
+            buildSection("Interface", [
+              SwitchListTile(
+                  title: const Text("Material You Theme"),
+                  value: Settings().materialYou,
+                  onChanged: (value) =>
+                      StateManager.updateAppThemeSync(materialYou: value)),
+              ListTile(
+                  title: const Text("Theme Color"),
+                  subtitle: Text(Settings().themeColor.asString()),
+                  trailing: themeColorIcon(Settings().themeColor),
+                  onTap: () => showColorChooser().then((color) =>
+                      StateManager.updateAppThemeSync(color: color))),
+              ListTile(
+                  title: const Text("Theme Mode"),
+                  subtitle: Text(Settings().themeBrightness.asString()),
+                  trailing: themeBrightnessIcon(Settings().themeBrightness),
+                  onTap: () => showThemeModeChooser().then((mode) =>
+                      StateManager.updateAppThemeSync(brightness: mode)))
+            ]),
+            buildSection("Data", [
+              Container(
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.only(left: 16.0),
+                  margin: const EdgeInsets.only(top: 4.0, bottom: 8.0),
+                  child: Text(
+                    "Keep data ${Settings().diskRetention.prettyString()}",
+                    style: Theme.of(context).textTheme.titleSmall,
+                  )),
+              Slider(
+                value: Settings().diskRetention.index.toDouble(),
+                max: (DiskRetention.values.length - 1).toDouble(),
+                divisions: DiskRetention.values.length - 1,
+                label: Settings().diskRetention.asString(),
+                onChanged: (value) {
+                  Settings().diskRetention =
+                      DiskRetention.values[value.toInt()];
+                  StateManager.updateSettings();
+                },
+              ),
+              const SizedBox(height: 8.0),
+              ListTile(
+                title: const Text("Clear Image Cache"),
+                subtitle:
+                    const Text("Clearing image cache will reduce space usage."),
+                onTap: () => showConfirmationDialog("Clear image cache",
+                        "Are you sure you want to clear all cached images?")
+                    .then((approved) {
+                  if (approved ?? false) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Clearing image cache!")));
+                  }
+                }),
+              ),
+              ListTile(
+                title: const Text("Clear Local Database"),
+                subtitle: const Text(
+                    "Clearing local database will reduce space usage."),
+                onTap: () => showConfirmationDialog("Clear local database",
+                        "Are you sure you want to clear cached messages?")
+                    .then((approved) {
+                  if (approved ?? false) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("Clearing local database!")));
+                  }
+                }),
+              ),
+              ListTile(
+                title: const Text("Optimize Database"),
+                subtitle: const Text(
+                    "Optimizing a database will reduce its size and slightly increase performance."),
+                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text("Optimizing local database!"))),
+              ),
+            ]),
+            buildSection("About", [
+              ListTile(
+                title: const Text("About"),
+                onTap: () => showAboutDialog(
+                  context: context,
+                  applicationIcon: appIcon,
+                  applicationName: appName,
+                  applicationVersion: appVersion,
+                  applicationLegalese: applicationLegalese,
+                ),
+              )
+            ]),
+          ]))
         ],
       ),
     );

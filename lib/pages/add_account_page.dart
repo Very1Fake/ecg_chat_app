@@ -334,6 +334,8 @@ class _NewAccountPageState extends State<NewAccountPage> {
               ),
               keyboardType: TextInputType.text,
               maxLength: 24,
+              textInputAction: TextInputAction.next,
+              onSubmitted: !loading ? (_) => onContinue() : null,
               controller: inputUsername,
             ),
           ),
@@ -349,6 +351,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
                 const SizedBox(height: 16.0),
                 TextField(
                   autofillHints: const [AutofillHints.email],
+                  autofocus: true,
                   decoration: InputDecoration(
                     border: const UnderlineInputBorder(),
                     filled: true,
@@ -359,6 +362,8 @@ class _NewAccountPageState extends State<NewAccountPage> {
                     errorText: inputError.string,
                   ),
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: !loading ? (_) => onContinue() : null,
                   controller: inputEmail,
                 )
               ],
@@ -375,6 +380,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
                     AutofillHints.password,
                     AutofillHints.newPassword
                   ],
+                  autofocus: true,
                   decoration: InputDecoration(
                     border: const UnderlineInputBorder(),
                     filled: true,
@@ -384,6 +390,12 @@ class _NewAccountPageState extends State<NewAccountPage> {
                         invalidPassword ? 'Minimum password length is 6' : null,
                   ),
                   obscureText: true,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: action != Action.signUp
+                      ? !loading
+                          ? (_) => onContinue()
+                          : null
+                      : null,
                   controller: inputPassword,
                 ),
                 if (action == Action.signUp) const SizedBox(height: 16.0),
@@ -404,6 +416,8 @@ class _NewAccountPageState extends State<NewAccountPage> {
                           : null,
                     ),
                     obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: !loading ? (_) => onContinue() : null,
                     controller: inputPasswordRepeat,
                   ),
               ],

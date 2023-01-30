@@ -1,3 +1,4 @@
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:ecg_chat_app/models/state_manager.dart';
 import 'package:ecg_chat_app/models/server.dart';
 import 'package:ecg_chat_app/models/settings.dart';
@@ -36,19 +37,33 @@ class _ChatAppState extends State<ChatApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ECG Chat App',
-      themeMode: Settings.themeMode,
-      theme: Settings.themeLight,
-      darkTheme: Settings.themeDark,
-      routes: {
-        '/': (context) => const EntryPage(),
-        '/main': (context) => const MainPage(),
-        '/chat': (context) => const ChatPage(),
-        '/add_server': (context) => const AddServerPage(),
-        '/add_account': (context) => const NewAccountPage(),
-        '/block_list': (context) => const BlockListPage(),
-        '/settings': (context) => const SettingsPage(),
+    return DynamicColorBuilder(
+      builder: (ColorScheme? lightSystemColor, ColorScheme? darkSystemColor) {
+        ColorScheme lightTheme = Settings.themeLightColorScheme;
+        ColorScheme darkTheme = Settings.themeDarkColorScheme;
+
+        if (Settings().themeColor == ThemeColor.system &&
+            lightSystemColor != null &&
+            darkSystemColor != null) {
+          lightTheme = lightSystemColor.harmonized();
+          darkTheme = darkSystemColor.harmonized();
+        }
+
+        return MaterialApp(
+          title: 'ECG Chat App',
+          themeMode: Settings.themeMode,
+          theme: Settings.themeData(lightTheme),
+          darkTheme: Settings.themeData(darkTheme),
+          routes: {
+            '/': (context) => const EntryPage(),
+            '/main': (context) => const MainPage(),
+            '/chat': (context) => const ChatPage(),
+            '/add_server': (context) => const AddServerPage(),
+            '/add_account': (context) => const NewAccountPage(),
+            '/block_list': (context) => const BlockListPage(),
+            '/settings': (context) => const SettingsPage(),
+          },
+        );
       },
     );
   }

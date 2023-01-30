@@ -69,24 +69,29 @@ class StateManager {
   static loadAccount([int? id]) {
     if (id != null) {
       db.writeTxnSync(() {
-        db.settings.putSync(Settings()
-          ..account.value = id > -1
-              ? db.accounts.getSync(id)
-              : db.accounts.where().sortByCreatedAtDesc().findFirstSync());
+        Settings().account.value = id > -1
+            ? db.accounts.getSync(id)
+            : db.accounts.where().sortByCreatedAtDesc().findFirstSync();
+
+        Settings().account.saveSync();
       });
     } else {
       Settings().account.loadSync();
     }
 
     API.maintainSession();
+
+    Settings().notify();
   }
 
   static addAccount(Account account) async {
-    Settings().account.value = account;
-
     await db.writeTxn(() async {
       await db.accounts.put(account);
-      await Settings().account.save();
+
+      if (Settings().account.value == null) {
+        Settings().account.value = account;
+        await Settings().account.save();
+      }
     });
 
     Settings().notify();

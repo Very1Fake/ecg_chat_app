@@ -2,16 +2,14 @@ import 'package:ecg_chat_app/models/account.dart';
 import 'package:ecg_chat_app/models/state_manager.dart';
 import 'package:ecg_chat_app/models/server.dart';
 import 'package:ecg_chat_app/models/settings.dart';
-import 'package:ecg_chat_app/utils/colors.dart';
 import 'package:ecg_chat_app/utils/consts.dart';
 import 'package:ecg_chat_app/utils/pair.dart';
 import 'package:ecg_chat_app/widgets/avatar.dart';
 import 'package:ecg_chat_app/widgets/centered_icon_message.dart';
-import 'package:ecg_chat_app/widgets/player_list_item.dart';
+import 'package:ecg_chat_app/widgets/drag_handler.dart';
 import 'package:ecg_chat_app/widgets/server_list_item.dart';
+import 'package:ecg_chat_app/widgets/simple_dialog_tile.dart';
 import 'package:flutter/material.dart';
-
-import '../models/player.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -21,6 +19,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  int currentAccount = -1;
   List<Pair<int, String>> accountList = [];
 
   bool accountManagerExpanded = false;
@@ -45,10 +44,7 @@ class _MainPageState extends State<MainPage> {
 
   onSettingsChanged() {
     if (Settings().account.value != null) {
-      accountList = StateManager.accountList
-          .map((acc) => Pair(acc.id, acc.username))
-          .toList(growable: false);
-      setState(() {});
+      setState(() => currentAccount = Settings().account.value!.id);
     } else {
       Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
     }
@@ -82,6 +78,41 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  accountSwitcher() {
+    Navigator.of(context).pop();
+    showDialog(
+        context: context,
+        builder: (context) =>
+            SimpleDialog(title: const Text("Accounts"), children: [
+              ...StateManager.accountList
+                  .map((acc) => SimpleDialogTile(
+                      leading: const Avatar(tertiary: true),
+                      title: Text(acc.username),
+                      trailing: acc.id == currentAccount
+                          ? const Avatar(
+                              icon: Icons.check,
+                              container: true,
+                              transparent: true,
+                            )
+                          : null,
+                      onPressed: () => Navigator.of(context)
+                          .pop(acc.id != currentAccount ? acc.id : null)))
+                  .toList(),
+              SimpleDialogTile(
+                leading: const Avatar(
+                    icon: Icons.add, container: true, transparent: true),
+                title: const Text("Add new account"),
+                onPressed: () =>
+                    Navigator.of(context).pushNamed('/add_account'),
+              ),
+              const SizedBox(height: 8),
+            ])).then((account) {
+      if (account != null) {
+        StateManager.loadAccount(account);
+      }
+    });
+  }
+
   Widget sectionFavorites() {
     int favoritesCount =
         ServerManager().list.where((server) => server.favorite).length;
@@ -108,20 +139,10 @@ class _MainPageState extends State<MainPage> {
     var theme = Theme.of(context);
 
     return showModalBottomSheet(
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32.0))),
       context: context,
       builder: (context) => Column(
         children: [
-          Container(
-            width: 64.0,
-            height: 4.0,
-            decoration: BoxDecoration(
-              color: theme.hintColor,
-              borderRadius: const BorderRadius.all(Radius.circular(20.0)),
-            ),
-            margin: const EdgeInsets.symmetric(vertical: 14.0),
-          ),
+          const DragHandle(),
           ListTile(
               leading: const Icon(Icons.info_outline),
               title: const Text("About server"),
@@ -189,108 +210,67 @@ class _MainPageState extends State<MainPage> {
         title: const Text("Server List"),
       ),
       drawerEdgeDragWidth: MediaQuery.of(context).size.width,
-      drawer: Drawer(
-        child: ListView(
-          padding: const EdgeInsets.all(0.0),
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: shiftLightness(theme.brightness,
-                    theme.colorScheme.primaryContainer, 0.0225),
-              ),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    Container(
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.all(16.0),
-                      child: CircleAvatar(
-                        backgroundColor: theme.colorScheme.primary,
-                        radius: 32.0,
-                        child: Icon(
-                          Icons.person,
-                          color: theme.colorScheme.onPrimary,
-                          size: 42.0,
-                        ),
-                      ),
-                    ),
-                    ExpansionTile(
-                        title: Text(
-                          account.username,
-                          style: theme.textTheme.titleSmall,
-                        ),
-                        subtitle: Text(
-                          account.email,
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(fontSize: 12.5),
-                        ),
-                        initiallyExpanded: accountManagerExpanded,
-                        childrenPadding:
-                            const EdgeInsets.symmetric(vertical: 4.0),
-                        onExpansionChanged: (value) => setState(() =>
-                            accountManagerExpanded = !accountManagerExpanded),
-                        children: [
-                          ...accountList
-                              .map((acc) => PlayerListItem(
-                                    Player(acc.second),
-                                    selected: acc.first == account.id,
-                                    callback: acc.first != account.id
-                                        ? (_) {
-                                            StateManager.loadAccount(acc.first);
-                                            setState(() {});
-                                            Navigator.of(context).pop();
-                                          }
-                                        : null,
-                                    titleStyle: theme.textTheme.titleSmall,
-                                  ))
-                              .toList(),
-                          ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(4.0),
-                              child: const Avatar(
-                                icon: Icons.add,
-                                container: true,
-                                transparent: true,
-                              ),
-                            ),
-                            title: const Text("Add Account"),
-                            onTap: () =>
-                                Navigator.of(context).pushNamed('/add_account'),
-                          )
-                        ]),
-                  ],
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.add),
-              title: const Text('New Server'),
-              onTap: () => addServer(true),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person_off),
-              title: const Text('Block List'),
-              onTap: () => Navigator.of(context).pushNamed('/block_list'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () => Navigator.of(context).pushNamed('/settings'),
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text("About app"),
-              onTap: () => showAboutDialog(
+      drawer: NavigationDrawer(
+        selectedIndex: null,
+        onDestinationSelected: (index) {
+          switch (index) {
+            case 0:
+              addServer(true);
+              break;
+            case 1:
+              Navigator.of(context).pushNamed('/block_list');
+              break;
+            case 2:
+              Navigator.of(context).pushNamed('/settings');
+              break;
+            case 3:
+              showAboutDialog(
                 context: context,
                 applicationIcon: appIcon,
                 applicationName: appName,
                 applicationVersion: appVersion,
                 applicationLegalese: applicationLegalese,
-              ),
-            )
-          ],
-        ),
+              );
+              break;
+          }
+        },
+        children: [
+          SizedBox(height: MediaQuery.of(context).padding.top + 16),
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 28),
+            leading: const Avatar(
+              tertiary: true,
+              radius: 20.0,
+            ),
+            title: Text(account.username),
+            subtitle: Text(account.email),
+            onTap: () => accountSwitcher(),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 28, vertical: 8),
+            child: Divider(),
+          ),
+          const NavigationDrawerDestination(
+            icon: Icon(Icons.add),
+            label: Text('New server'),
+          ),
+          const NavigationDrawerDestination(
+            icon: Icon(Icons.person_off),
+            label: Text('Block list'),
+          ),
+          const NavigationDrawerDestination(
+            icon: Icon(Icons.settings),
+            label: Text('Settings'),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 28, vertical: 8),
+            child: Divider(),
+          ),
+          const NavigationDrawerDestination(
+            icon: Icon(Icons.info),
+            label: Text('About app'),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         color: theme.colorScheme.onSurfaceVariant,
@@ -329,17 +309,28 @@ class _MainPageState extends State<MainPage> {
         child: const Icon(Icons.add),
         onPressed: () => addServer(),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-          currentIndex: section,
-          enableFeedback: true,
-          showUnselectedLabels: false,
-          onTap: (index) => changeSection(index),
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.dns), label: "Servers"),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.favorite), label: "Favorites"),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.explore), label: "Explore"),
+      bottomNavigationBar: NavigationBar(
+          selectedIndex: section,
+          onDestinationSelected: (index) => changeSection(index),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.dns_outlined),
+              selectedIcon: Icon(Icons.dns),
+              label: "Servers",
+              tooltip: "List of game servers",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.favorite_outline),
+              selectedIcon: Icon(Icons.favorite),
+              label: "Favorites",
+              tooltip: "List of favorite servers",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.explore_outlined),
+              selectedIcon: Icon(Icons.explore),
+              label: "Discover",
+              tooltip: "Hub social (WIP)",
+            ),
           ]),
     );
   }

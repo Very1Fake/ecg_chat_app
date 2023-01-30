@@ -152,17 +152,18 @@ class Settings extends ChangeNotifier {
 
   // Theming
 
-  static ThemeData themeData(Brightness brightness) => ThemeData(
-        brightness: brightness,
-        colorSchemeSeed: _instance.themeColor.toColor(),
+  static ThemeData themeData(ColorScheme colorScheme) => ThemeData(
+        colorScheme: colorScheme,
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           landscapeLayout: BottomNavigationBarLandscapeLayout.centered,
         ),
         useMaterial3: _instance.materialYou,
       );
 
-  static ThemeData get themeLight => themeData(Brightness.light);
-  static ThemeData get themeDark => themeData(Brightness.dark);
+  static ColorScheme get themeLightColorScheme =>
+      ColorScheme.fromSeed(seedColor: _instance.themeColor.toColor());
+  static ColorScheme get themeDarkColorScheme => ColorScheme.fromSeed(
+      seedColor: _instance.themeColor.toColor(), brightness: Brightness.dark);
   static ThemeMode get themeMode => _instance.themeBrightness.toThemeMode();
 
   notify() => notifyListeners();

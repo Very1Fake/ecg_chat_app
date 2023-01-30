@@ -1,6 +1,7 @@
 import 'package:ecg_chat_app/models/message.dart';
 import 'package:ecg_chat_app/models/player.dart';
 import 'package:ecg_chat_app/models/settings.dart';
+import 'package:ecg_chat_app/widgets/drag_handler.dart';
 import 'package:ecg_chat_app/widgets/message_bubble.dart';
 import 'package:ecg_chat_app/widgets/avatar.dart';
 import 'package:ecg_chat_app/widgets/player_list_item.dart';
@@ -51,20 +52,10 @@ class _ChatPageState extends State<ChatPage> {
     var theme = Theme.of(context);
 
     return showModalBottomSheet(
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32.0))),
       context: context,
       builder: (context) => Column(
         children: [
-          Container(
-            width: 64.0,
-            height: 4.0,
-            decoration: BoxDecoration(
-              color: theme.hintColor,
-              borderRadius: const BorderRadius.all(Radius.circular(20.0)),
-            ),
-            margin: const EdgeInsets.symmetric(vertical: 14.0),
-          ),
+          const DragHandle(),
           ListTile(
               leading: const Icon(Icons.person),
               title: Text("@${player.username}"),
