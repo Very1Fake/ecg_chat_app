@@ -1,4 +1,5 @@
-import 'package:ecg_chat_app/models/isar_service.dart';
+import 'package:ecg_chat_app/models/state_manager.dart';
+import 'package:ecg_chat_app/utils/api.dart';
 import 'package:ecg_chat_app/utils/consts.dart';
 import 'package:ecg_chat_app/models/settings.dart';
 import 'package:ecg_chat_app/widgets/simple_dialog_tile.dart';
@@ -154,12 +155,21 @@ class _SettingsPageState extends State<SettingsPage> {
               title: const Text("Log Out"),
               onTap: () {
                 setState(() => loading = true);
-                Future.delayed(const Duration(seconds: 3)).then((_) {
-                  IsarService.logOut();
-                  Navigator.of(context)
-                      .pushNamedAndRemoveUntil('/', (_) => false);
-
+                Future(() async {
+                  if (await API.tokenRevoke()) {
+                    StateManager.logOut();
+                    return true;
+                  }
+                  return false;
+                }).then((success) {
                   if (mounted) {
+                    if (success) {
+                      Navigator.of(context)
+                          .pushNamedAndRemoveUntil('/', (_) => false);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Failed to logout!')));
+                    }
                     setState(() => loading = false);
                   }
                 });
@@ -171,19 +181,19 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: const Text("Material You Theme"),
                 value: Settings().materialYou,
                 onChanged: (value) =>
-                    IsarService.updateAppThemeSync(materialYou: value)),
+                    StateManager.updateAppThemeSync(materialYou: value)),
             ListTile(
                 title: const Text("Theme Color"),
                 subtitle: Text(Settings().themeColor.asString()),
                 trailing: themeColorIcon(Settings().themeColor),
                 onTap: () => showColorChooser().then(
-                    (color) => IsarService.updateAppThemeSync(color: color))),
+                    (color) => StateManager.updateAppThemeSync(color: color))),
             ListTile(
                 title: const Text("Theme Mode"),
                 subtitle: Text(Settings().themeBrightness.asString()),
                 trailing: themeBrightnessIcon(Settings().themeBrightness),
-                onTap: () => showThemeModeChooser().then(
-                    (mode) => IsarService.updateAppThemeSync(brightness: mode)))
+                onTap: () => showThemeModeChooser().then((mode) =>
+                    StateManager.updateAppThemeSync(brightness: mode)))
           ]),
           buildSection("Data", [
             Container(
@@ -201,7 +211,7 @@ class _SettingsPageState extends State<SettingsPage> {
               label: Settings().diskRetention.asString(),
               onChanged: (value) {
                 Settings().diskRetention = DiskRetention.values[value.toInt()];
-                IsarService.updateSettings();
+                StateManager.updateSettings();
               },
             ),
             const SizedBox(height: 8.0),

@@ -135,14 +135,15 @@ Account _accountDeserialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = Account();
+  final object = Account(
+    reader.readString(offsets[5]),
+    reader.readString(offsets[4]),
+    reader.readString(offsets[1]),
+    reader.readString(offsets[3]),
+  );
   object.createdAt = reader.readDateTime(offsets[0]);
-  object.email = reader.readString(offsets[1]);
   object.expiresAt = reader.readDateTime(offsets[2]);
   object.id = id;
-  object.token = reader.readString(offsets[3]);
-  object.username = reader.readString(offsets[4]);
-  object.uuid = reader.readString(offsets[5]);
   return object;
 }
 

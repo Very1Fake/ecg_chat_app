@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:ecg_chat_app/models/account.dart';
-import 'package:ecg_chat_app/models/isar_service.dart';
+import 'package:ecg_chat_app/models/state_manager.dart';
 import 'package:ecg_chat_app/models/settings.dart';
 import 'package:ecg_chat_app/utils/validation.dart';
 import 'package:ecg_chat_app/widgets/bottom_progress_indicator.dart';
@@ -142,12 +142,15 @@ class _NewAccountPageState extends State<NewAccountPage> {
         final login = await API.userLogin(username, password);
 
         if (login != null) {
-          final userData = (await API.userData(login.access))!;
-          await IsarService.addAccount(Account()
-            ..uuid = userData.uuid
-            ..username = userData.username
-            ..email = userData.email
-            ..token = login.refresh);
+          API.beginTempSession(login.refresh);
+          final userData = (await API.userData())!;
+          API.endTempSession();
+          await StateManager.addAccount(Account(
+            userData.uuid,
+            userData.username,
+            userData.email,
+            login.refresh,
+          ));
           return null;
         } else {
           return FinishError.wrongPassword;
@@ -159,13 +162,16 @@ class _NewAccountPageState extends State<NewAccountPage> {
         if (register != null) {
           if (register) {
             final login = (await API.userLogin(username, password))!;
-            final userData = (await API.userData(login.access))!;
+            API.beginTempSession(login.refresh);
+            final userData = (await API.userData())!;
+            API.endTempSession();
 
-            await IsarService.addAccount(Account()
-              ..uuid = userData.uuid
-              ..username = userData.username
-              ..email = userData.email
-              ..token = login.refresh);
+            await StateManager.addAccount(Account(
+              userData.uuid,
+              userData.username,
+              userData.email,
+              login.refresh,
+            ));
             return null;
           } else {
             return FinishError.emailTaken;
@@ -198,7 +204,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
         final username = inputUsername.text.trim();
 
         if (username.isValidUsername()) {
-          if (IsarService.db.accounts
+          if (StateManager.db.accounts
                   .where()
                   .usernameEqualTo(username)
                   .findFirstSync() !=
@@ -222,7 +228,7 @@ class _NewAccountPageState extends State<NewAccountPage> {
       case Stage.askEmail:
         final email = inputEmail.text.trim();
         if (email.isValidEmail()) {
-          if (IsarService.db.accounts
+          if (StateManager.db.accounts
                   .where()
                   .emailEqualTo(email)
                   .findFirstSync() !=
@@ -416,7 +422,8 @@ class _NewAccountPageState extends State<NewAccountPage> {
                 if (finishError != null)
                   Text(
                     finishError!.string,
-                    style: TextStyle(color: Theme.of(context).errorColor),
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error),
                   ),
                 const SizedBox(height: 8.0),
               ],

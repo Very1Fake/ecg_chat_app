@@ -2,6 +2,8 @@ import 'package:ecg_chat_app/models/account.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 
+import '../utils/api.dart';
+
 part 'settings.g.dart';
 
 enum ThemeColor {
@@ -120,12 +122,13 @@ enum DiskRetention {
 
 @collection
 class Settings extends ChangeNotifier {
-  @ignore
-  static Settings instance = Settings._();
+  static final Settings _instance = Settings._();
 
   Settings._();
 
-  factory Settings() => instance;
+  factory Settings() => _instance;
+
+  // Entity fields
 
   Id id = 0;
 
@@ -151,16 +154,16 @@ class Settings extends ChangeNotifier {
 
   static ThemeData themeData(Brightness brightness) => ThemeData(
         brightness: brightness,
-        colorSchemeSeed: instance.themeColor.toColor(),
+        colorSchemeSeed: _instance.themeColor.toColor(),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           landscapeLayout: BottomNavigationBarLandscapeLayout.centered,
         ),
-        useMaterial3: instance.materialYou,
+        useMaterial3: _instance.materialYou,
       );
 
   static ThemeData get themeLight => themeData(Brightness.light);
   static ThemeData get themeDark => themeData(Brightness.dark);
-  static ThemeMode get themeMode => instance.themeBrightness.toThemeMode();
+  static ThemeMode get themeMode => _instance.themeBrightness.toThemeMode();
 
   notify() => notifyListeners();
 }

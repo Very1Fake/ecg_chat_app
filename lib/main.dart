@@ -1,4 +1,4 @@
-import 'package:ecg_chat_app/models/isar_service.dart';
+import 'package:ecg_chat_app/models/state_manager.dart';
 import 'package:ecg_chat_app/models/server.dart';
 import 'package:ecg_chat_app/models/settings.dart';
 import 'package:ecg_chat_app/pages/add_account_page.dart';
@@ -12,9 +12,9 @@ import 'package:ecg_chat_app/utils/api.dart';
 import 'package:flutter/material.dart';
 
 Future<void> main() async {
-  await IsarService.init();
-  await API.init();
+  await StateManager.init();
 
+  API.init();
   ServerManager.init();
 
   runApp(const ChatApp());

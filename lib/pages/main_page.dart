@@ -1,14 +1,17 @@
 import 'package:ecg_chat_app/models/account.dart';
-import 'package:ecg_chat_app/models/isar_service.dart';
+import 'package:ecg_chat_app/models/state_manager.dart';
 import 'package:ecg_chat_app/models/server.dart';
 import 'package:ecg_chat_app/models/settings.dart';
 import 'package:ecg_chat_app/utils/colors.dart';
 import 'package:ecg_chat_app/utils/consts.dart';
+import 'package:ecg_chat_app/utils/pair.dart';
 import 'package:ecg_chat_app/widgets/avatar.dart';
 import 'package:ecg_chat_app/widgets/centered_icon_message.dart';
 import 'package:ecg_chat_app/widgets/player_list_item.dart';
 import 'package:ecg_chat_app/widgets/server_list_item.dart';
 import 'package:flutter/material.dart';
+
+import '../models/player.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -18,7 +21,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  List<Account> accountList = [];
+  List<Pair<int, String>> accountList = [];
 
   bool accountManagerExpanded = false;
   bool needToScrollToBottom = false;
@@ -40,9 +43,16 @@ class _MainPageState extends State<MainPage> {
     super.dispose();
   }
 
-  onSettingsChanged() => setState(() {
-        accountList = IsarService.accountList;
-      });
+  onSettingsChanged() {
+    if (Settings().account.value != null) {
+      accountList = StateManager.accountList
+          .map((acc) => Pair(acc.id, acc.username))
+          .toList(growable: false);
+      setState(() {});
+    } else {
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
+    }
+  }
 
   changeSection(int newSection) {
     // Scroll to top if current section
@@ -211,8 +221,8 @@ class _MainPageState extends State<MainPage> {
                         ),
                         subtitle: Text(
                           account.email,
-                          style:
-                              theme.textTheme.caption?.copyWith(fontSize: 12.5),
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(fontSize: 12.5),
                         ),
                         initiallyExpanded: accountManagerExpanded,
                         childrenPadding:
@@ -222,11 +232,11 @@ class _MainPageState extends State<MainPage> {
                         children: [
                           ...accountList
                               .map((acc) => PlayerListItem(
-                                    acc.toPlayer(),
-                                    selected: acc.id == account.id,
-                                    callback: acc.id != account.id
+                                    Player(acc.second),
+                                    selected: acc.first == account.id,
+                                    callback: acc.first != account.id
                                         ? (_) {
-                                            IsarService.switchAccount(acc);
+                                            StateManager.loadAccount(acc.first);
                                             setState(() {});
                                             Navigator.of(context).pop();
                                           }

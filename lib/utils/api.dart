@@ -1,16 +1,33 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:ecg_chat_app/models/settings.dart';
+import 'package:ecg_chat_app/models/state_manager.dart';
+import 'package:ecg_chat_app/utils/pair.dart';
 import 'package:flutter/rendering.dart';
 
+import '../models/account.dart';
 import '../models/api.dart';
 
 class API {
   static const String apiUrl = "https://hub.very1faker.tk/";
+  static const Duration accessRotate = Duration(seconds: 5);
 
   static late Dio dio;
 
-  static init() async {
+  // State
+
+  static Account? tempAccount;
+
+  static beginTempSession(String token) {
+    tempAccount = Account.temp(token);
+  }
+
+  static endTempSession() {
+    tempAccount = null;
+  }
+
+  static init() {
     dio = Dio(BaseOptions(
       baseUrl: apiUrl,
       connectTimeout: 5000,
@@ -19,6 +36,30 @@ class API {
       validateStatus: (_) => true,
     ))
       ..interceptors.add(LogInterceptor(requestBody: false));
+  }
+
+  // Endpoints
+
+  static Future<TokenPair?> maintainSession() async {
+    final account = tempAccount ?? Settings().account.value;
+
+    if (account == null) return null;
+
+    if (account.accessExpiry.difference(DateTime.now()) < accessRotate ||
+        account.accessToken == null) {
+      final result = await tokenRefresh(account.token);
+      final pair = result.first;
+
+      if (pair != null) {
+        account.token = pair.refresh;
+        account.accessToken = pair.access;
+      } else {
+        if (result.second) StateManager.logOut();
+        return null;
+      }
+    }
+
+    return TokenPair(account.token, account.accessToken!);
   }
 
   static Future<UserInfo?> userInfo(String username) async {
@@ -32,16 +73,18 @@ class API {
     }
   }
 
-  static Future<UserData?> userData(String token) async {
-    final resp = await dio.get('/user/data',
-        options: Options(headers: {'Authorization': 'Bearer $token'}));
+  static Future<UserData?> userData() async {
+    final pair = await maintainSession();
 
-    if (resp.statusCode == 200) {
-      debugPrint(UserData.fromMap(resp.data).createdAt.toIso8601String());
-      return UserData.fromMap(resp.data);
-    } else {
-      return null;
+    if (pair != null) {
+      final resp = await dio.get('/user/data',
+          options:
+              Options(headers: {'Authorization': 'Bearer ${pair.access}'}));
+
+      if (resp.statusCode == 200) return UserData.fromMap(resp.data);
     }
+
+    return null;
   }
 
   static Future<TokenPair?> userLogin(String username, String password) async {
@@ -87,5 +130,49 @@ class API {
     }
   }
 
-  static tokenRefresh(String refreshToken) async {}
+  static Future<Pair<TokenPair?, bool>> tokenRefresh(String token) async {
+    final jar = CookieJar();
+    final manager = CookieManager(jar);
+    dio.interceptors.add(manager);
+
+    final resp = await dio.get('token/refresh',
+        options: Options(
+            headers: {'Cookie': 'hub-rt=$token;'},
+            responseType: ResponseType.plain));
+
+    dio.interceptors.remove(manager);
+
+    if (resp.statusCode == 200) {
+      final cookies = (await jar
+          .loadForRequest(Uri.https('hub.very1faker.tk', '/user/login')));
+
+      return Pair(
+        TokenPair(
+            cookies.length > 1
+                ? cookies.firstWhere((cookie) => cookie.name == 'hub-rt').value
+                : token,
+            resp.data as String),
+        true,
+      );
+    } else if (resp.statusCode == 404) {
+      return Pair(null, true);
+    } else {
+      return Pair(null, false);
+    }
+  }
+
+  static Future<bool> tokenRevoke() async {
+    final pair = await maintainSession();
+
+    if (pair == null) return false;
+
+    final resp = await dio.get('token/revoke',
+        options: Options(headers: {'Authorization': 'Bearer ${pair.access}'}));
+
+    if (resp.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }

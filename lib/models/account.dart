@@ -1,17 +1,22 @@
 import 'package:ecg_chat_app/models/player.dart';
 import 'package:isar/isar.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 part 'account.g.dart';
 
-// TODO: Reload account info from API at every startup
 @collection
 class Account {
-  @ignore
-  static final sample = Account()
-    ..uuid = '00000000-0000-0000-0000-000000000000'
-    ..username = 'sample'
-    ..email = 'sample@mail.com'
-    ..token = '';
+  // @ignore
+  static final sample = Account(
+    '00000000-0000-0000-0000-000000000000',
+    'example',
+    'example@example.com',
+    '',
+  );
+
+  Account(this.uuid, this.username, this.email, this.token);
+
+  Account.temp(this.token);
 
   Id id = Isar.autoIncrement;
 
@@ -27,5 +32,20 @@ class Account {
 
   Player toPlayer() {
     return Player(username);
+  }
+
+  // Sessions
+
+  @ignore
+  String? _accessToken;
+  @ignore
+  DateTime accessExpiry = DateTime.now();
+
+  @ignore
+  String? get accessToken => _accessToken;
+  set accessToken(String? token) {
+    _accessToken = token;
+    accessExpiry =
+        token != null ? JwtDecoder.getExpirationDate(token) : DateTime.now();
   }
 }

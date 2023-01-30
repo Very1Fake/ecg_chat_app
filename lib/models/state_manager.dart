@@ -1,17 +1,18 @@
 import 'package:ecg_chat_app/models/account.dart';
 import 'package:ecg_chat_app/models/settings.dart';
-import 'package:faker/faker.dart';
 import 'package:isar/isar.dart';
 
-class IsarService {
+import '../utils/api.dart';
+
+class StateManager {
   late Isar _db;
 
-  static late IsarService _instance;
+  static late StateManager _instance;
 
   static Isar get db => _instance._db;
 
   static init() async {
-    _instance = IsarService();
+    _instance = StateManager();
     _instance._db = await Isar.open(
       [SettingsSchema, AccountSchema],
       inspector: true,
@@ -65,10 +66,19 @@ class IsarService {
   static List<Account> get accountList =>
       db.accounts.where().sortByCreatedAt().findAllSync();
 
-  static switchAccount(Account account) {
-    db.writeTxnSync(() {
-      db.settings.putSync(Settings()..account.value = account);
-    });
+  static loadAccount([int? id]) {
+    if (id != null) {
+      db.writeTxnSync(() {
+        db.settings.putSync(Settings()
+          ..account.value = id > -1
+              ? db.accounts.getSync(id)
+              : db.accounts.where().sortByCreatedAtDesc().findFirstSync());
+      });
+    } else {
+      Settings().account.loadSync();
+    }
+
+    API.maintainSession();
   }
 
   static addAccount(Account account) async {
@@ -82,31 +92,11 @@ class IsarService {
     Settings().notify();
   }
 
-  static register(String username, String email, String password) async {
-    var account = Account()
-      ..uuid = ''
-      ..username = username
-      ..email = email
-      ..token = "<some-refresh-token>";
-    Settings().account.value = account;
-
-    await db.writeTxn(() async {
-      await db.accounts.put(account);
-      await Settings().account.save();
-    });
-
-    Settings().notify();
-  }
-
   static logOut() {
-    db.writeTxnSync(() {
-      db.accounts.deleteSync(Settings().account.value!.id);
+    db.writeTxnSync(() => db.accounts.deleteSync(Settings().account.value!.id));
 
-      // Try to find another account
-      db.settings.putSync(Settings()
-        ..account.value =
-            db.accounts.where().sortByCreatedAtDesc().findFirstSync());
-    });
+    // Try to find another account
+    loadAccount(-1);
 
     Settings().notify();
   }
