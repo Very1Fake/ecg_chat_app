@@ -153,6 +153,10 @@ class _SettingsPageState extends State<SettingsPage> {
               delegate: SliverChildListDelegate([
             buildSection("Account", [
               ListTile(
+                title: const Text("Sessions"),
+                onTap: () => Navigator.of(context).pushNamed('/sessions'),
+              ),
+              ListTile(
                 title: const Text("Log Out"),
                 onTap: () {
                   setState(() => loading = true);

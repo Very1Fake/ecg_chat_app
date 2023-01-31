@@ -8,6 +8,7 @@ import 'package:ecg_chat_app/pages/block_list_page.dart';
 import 'package:ecg_chat_app/pages/chat_page.dart';
 import 'package:ecg_chat_app/pages/entry_page.dart';
 import 'package:ecg_chat_app/pages/main_page.dart';
+import 'package:ecg_chat_app/pages/sessions_page.dart';
 import 'package:ecg_chat_app/pages/settings_page.dart';
 import 'package:ecg_chat_app/utils/api.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +63,7 @@ class _ChatAppState extends State<ChatApp> {
             '/add_account': (context) => const NewAccountPage(),
             '/block_list': (context) => const BlockListPage(),
             '/settings': (context) => const SettingsPage(),
+            '/sessions': (context) => const SessionsPage(),
           },
         );
       },

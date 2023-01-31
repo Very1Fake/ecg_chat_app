@@ -97,6 +97,12 @@ class StateManager {
     Settings().notify();
   }
 
+  static updateAccount(Account account) async {
+    await db.writeTxn(() async {
+      await db.accounts.put(account);
+    });
+  }
+
   static logOut() {
     db.writeTxnSync(() => db.accounts.deleteSync(Settings().account.value!.id));
 

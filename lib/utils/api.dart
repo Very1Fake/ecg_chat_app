@@ -11,7 +11,7 @@ import '../models/api.dart';
 
 class API {
   static const String apiUrl = "https://hub.very1faker.tk/";
-  static const Duration accessRotate = Duration(seconds: 5);
+  static const Duration accessRotate = Duration(seconds: 10);
 
   static late Dio dio;
 
@@ -30,9 +30,9 @@ class API {
   static init() {
     dio = Dio(BaseOptions(
       baseUrl: apiUrl,
-      connectTimeout: 5000,
-      sendTimeout: 2500,
-      receiveTimeout: 2500,
+      connectTimeout: 7500,
+      sendTimeout: 3000,
+      receiveTimeout: 5000,
       validateStatus: (_) => true,
     ))
       ..interceptors.add(LogInterceptor(requestBody: false));
@@ -42,6 +42,7 @@ class API {
 
   static Future<TokenPair?> maintainSession() async {
     final account = tempAccount ?? Settings().account.value;
+    final isTemp = tempAccount != null;
 
     if (account == null) return null;
 
@@ -53,6 +54,7 @@ class API {
       if (pair != null) {
         account.token = pair.refresh;
         account.accessToken = pair.access;
+        if (!isTemp) await StateManager.updateAccount(account);
       } else {
         if (result.second) StateManager.logOut();
         return null;
@@ -148,7 +150,7 @@ class API {
 
       return Pair(
         TokenPair(
-            cookies.length > 1
+            cookies.isNotEmpty
                 ? cookies.firstWhere((cookie) => cookie.name == 'hub-rt').value
                 : token,
             resp.data as String),
@@ -173,6 +175,55 @@ class API {
       return true;
     } else {
       return false;
+    }
+  }
+
+  static Future<bool> tokenRevokeAll() async {
+    final pair = await maintainSession();
+
+    if (pair == null) return false;
+
+    final jar = CookieJar();
+    final manager = CookieManager(jar);
+    dio.interceptors.add(manager);
+
+    final resp = await dio.get('token/revoke_all',
+        options: Options(
+            headers: {'Authorization': 'Bearer ${pair.access}'},
+            responseType: ResponseType.plain));
+
+    dio.interceptors.remove(manager);
+
+    if (resp.statusCode == 200) {
+      final cookies = (await jar
+          .loadForRequest(Uri.https('hub.very1faker.tk', '/token/revoke_all')));
+      final account = Settings().account.value!;
+
+      account.token = cookies.isNotEmpty
+          ? cookies.firstWhere((cookie) => cookie.name == 'hub-rt').value
+          : pair.refresh;
+
+      account.accessToken = resp.data;
+      await StateManager.updateAccount(account);
+
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  static Future<UserSessions?> userSessions() async {
+    final pair = await maintainSession();
+
+    if (pair == null) return null;
+
+    final resp = await dio.get('user/sessions',
+        options: Options(headers: {'Authorization': 'Bearer ${pair.access}'}));
+
+    if (resp.statusCode == 200) {
+      return UserSessions.fromMap(resp.data as Map<String, dynamic>);
+    } else {
+      return null;
     }
   }
 }
