@@ -37,9 +37,8 @@ class _ChatPageState extends State<ChatPage> {
       actions: [
         Builder(builder: (context) {
           return IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).clearMaterialBanners();
-            },
+            onPressed: () =>
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
             icon: const Icon(Icons.close),
           );
         })
@@ -163,11 +162,12 @@ class _ChatPageState extends State<ChatPage> {
                     itemCount: messages.length,
                     reverse: true,
                     itemBuilder: (context, index) {
-                      Message message = messages[index];
+                      Message message = messages.reversed.elementAt(index);
 
                       return GestureDetector(
                         behavior: HitTestBehavior.deferToChild,
-                        onTap: () => showMessageOptions(message),
+                        onTap: () => showMessageOptions(
+                            message, messages.length - index - 1),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
                           child: Row(
@@ -218,7 +218,7 @@ class _ChatPageState extends State<ChatPage> {
                         decoration: InputDecoration(
                           isDense: true,
                           filled: true,
-                          fillColor: Theme.of(context).backgroundColor,
+                          fillColor: Theme.of(context).colorScheme.background,
                           hintText: 'Message',
                           border: const OutlineInputBorder(
                             borderRadius:
@@ -253,8 +253,15 @@ class _ChatPageState extends State<ChatPage> {
                           }),
                         ),
                         icon: const Icon(Icons.send),
-                        onPressed: () => showBannerMessage(
-                            'Message sending will be available soon...'),
+                        onPressed: () {
+                          final msg = messageController.text.trim();
+
+                          if (msg.isNotEmpty) {
+                            messages.add(Message(msg));
+                            messageController.clear();
+                            setState(() {});
+                          }
+                        },
                       ),
                     )
                   ],
@@ -273,7 +280,7 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Future<void> showMessageOptions(Message message) {
+  Future<void> showMessageOptions(Message message, int index) {
     return showDialog(
       context: context,
       builder: (context) => SimpleDialog(
@@ -302,7 +309,8 @@ class _ChatPageState extends State<ChatPage> {
             leading: const TileAvatarIcon(Icons.delete, radius: 16),
             title: const Text('Delete'),
             onPressed: () {
-              showBannerMessage('Delete message feature will added soon...');
+              messages.removeAt(index);
+              setState(() {});
               Navigator.of(context).pop();
             },
           )

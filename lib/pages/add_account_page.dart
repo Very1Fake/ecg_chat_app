@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:ecg_chat_app/models/account.dart';
 import 'package:ecg_chat_app/models/state_manager.dart';
-import 'package:ecg_chat_app/models/settings.dart';
 import 'package:ecg_chat_app/utils/validation.dart';
 import 'package:ecg_chat_app/widgets/bottom_progress_indicator.dart';
 import 'package:faker/faker.dart';
